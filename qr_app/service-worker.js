@@ -1,16 +1,15 @@
 // インストール時に offline.html を含むすべてのアセットをキャッシュ
 const CACHE_NAME = 'qr-lottery-v1';
 const ASSETS = [
-  '/',
-  '/index.html',
-  '/offline.html',        // オフライン用ページをキャッシュ
-  '/manifest.json',
-  '/service-worker.js',
-  '/images/icon-192.png',
-  '/images/icon-512.png',
-  '/images/bg_setup.jpg',
-  '/images/bg_play.jpg',
-  '/images/1等.png',
+  'index.html',
+  'offline.html',        // オフライン用ページをキャッシュ
+  'manifest.json',
+  'service-worker.js',
+  'images/icon-192.png',
+  'images/icon-512.png',
+  'images/bg_setup.jpg',
+  'images/bg_play.jpg',
+  'images/1等.png',
   // …(3等～10等, default画像, result/*.html, BGMなど)… 
 ];
 
