@@ -29,7 +29,7 @@ self.addEventListener('fetch', event => {
   // ページ遷移要求時はまずネットワーク、失敗時に offline.html を返す
   if (req.mode === 'navigate') {
     event.respondWith(
-      fetch(req).catch(() => caches.match('/offline.html'))
+      fetch(req).catch(() => caches.match('offline.html'))
     );
     return;
   }
