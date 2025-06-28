@@ -294,7 +294,7 @@
         const fi  = groups[i].querySelector('input[name="resultImage"]');
         const img = fi.files[0]
           ? await imageToBase64(fi.files[0])
-          : `/images/default_${i+1}等.png`;
+          : `images/default_${i+1}等.png`;
         for (let j=0; j<cnt; j++) {
           data.push({ id:`qr${id++}`, image:`images/${i+1}等.png`,
                       resultImage:img, rank:`${i+1}等` });
