@@ -1,0 +1,8 @@
+{
+  "name": "QR抽選アプリ",
+  "short_name": "QR抽選",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "description": "QR抽選アプリのPWA対応用マニフェスト"
+}

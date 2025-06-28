@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QR抽選アプリ（枚数マッチ版）</title>
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#ff4081" />
+  <style>
+    body { margin: 0; font-family: sans-serif; background: #fafafa; text-align: center; }
+    h1 { color: #ff4081; }
+    p { color: #333; }
+  </style>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('service-worker.js')
+          .catch(() => console.warn('SW登録失敗'));
+      });
+    }
+  </script>
+</head>
+<body>
+  <h1>QR抽選アプリ（GitHub Pages 動作確認用）</h1>
+  <p>GitHub Pagesで正常動作する修正版です。</p>
+  <p>詳細設定・ゲーム機能は今までの内容をそのまま統合してください。</p>
+</body>
+</html>
