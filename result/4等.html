@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>4等の結果</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { text-align: center; font-family: sans-serif; margin: 2rem; background: #fafafa; }
+    img  { max-width: 90vw; max-height: 80vh; border: 4px solid #ccc; border-radius: 8px; }
+    .btn { margin: 0.5rem; padding: 10px 20px; font-size: 1rem; border: none; border-radius: 6px; cursor: pointer; }
+    #exchange-btn { background: #4caf50; color: #fff; }
+    #twitter-share { background: #1da1f2; color: #fff; }
+    #line-share    { background: #00c300; color: #fff; }
+    #native-share  { background: #555; color: #fff; }
+    button:disabled { opacity: 0.6; cursor: default; }
+  </style>
+</head>
+<body>
+  <h1>🎉 4等 🎉</h1>
+  <img id="result-img" src="" alt="4等結果"><br><br>
+  <div id="share-buttons">
+    <button id="twitter-share" class="btn">🐦 Xでシェア</button>
+    <button id="line-share"    class="btn">💬 LINEでシェア</button>
+    <button id="native-share"  class="btn">🔗 共有</button>
+  </div>
+  <button id="exchange-btn" class="btn">景品を引き換える</button>
+
+  <script>
+    (function() {
+      const rank = "4等";
+      const imgEl = document.getElementById("result-img");
+      const btnEx = document.getElementById("exchange-btn");
+
+      imgEl.src = "../images/default_4th.png";
+
+      btnEx.addEventListener("click", function() {
+        btnEx.textContent = "✅ 引き換え済み";
+        btnEx.disabled = true;
+      });
+
+      const shareUrl = location.href;
+      const tweetText = encodeURIComponent("🎉 " + rank + " 当たりました！");
+      const encodedUrl = encodeURIComponent(shareUrl);
+
+      document.getElementById("twitter-share").onclick = () => {
+        const twitterLink = "https://twitter.com/intent/tweet?text=" + tweetText + "&url=" + encodedUrl;
+        window.open(twitterLink, "_blank");
+      };
+      document.getElementById("line-share").onclick = () => {
+        const lineLink = "https://social-plugins.line.me/lineit/share?url=" + encodedUrl;
+        window.open(lineLink, "_blank");
+      };
+      document.getElementById("native-share").onclick = async () => {
+        if (navigator.share) {
+          try {
+            await navigator.share({
+              title: "QR抽選アプリ",
+              text: rank + " 当たりました！",
+              url: shareUrl
+            });
+          } catch (err) {
+            console.error("シェアに失敗しました:", err);
+          }
+        } else {
+          alert("お使いのブラウザはネイティブシェアに対応していません");
+        }
+      };
+    })();
+  </script>
+</body>
+</html>
