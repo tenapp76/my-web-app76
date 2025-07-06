@@ -309,15 +309,15 @@
       for (let i=0; i<groups.length; i++) {
         const cnt = counts[i];
         const fi  = groups[i].querySelector('input[name="resultImage"]');
-   // 実際のデフォルト画像は default_1等.png 〜 default_10等.png
-        const defaultImg = `images/default_${i+1}等.png`;
+   // 実際のデフォルト画像は default_1.png 〜 default_10.png
+        const defaultImg = `images/default_${i+1}.png`;
         const img = fi.files[0]
         ? await imageToBase64(fi.files[0])
         : defaultImg;
         for (let j=0; j<cnt; j++) {
       data.push({
         id: `qr${id++}`,
-        image: `images/${i+1}等.png`,       // ローカルの QR コード画像を参照
+        image: `images/${i+1}.png`,       // ローカルの QR コード画像を参照
         resultImage: img,
         rank: `${i+1}等`
       });
