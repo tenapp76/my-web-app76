@@ -53,11 +53,11 @@
       // アップロード画像（Base64 等）があれば優先、なければ正しい相対パスでデフォルト画像を設定
       const stored = localStorage.getItem('lastResultImage');
       if (stored) {
-      // 相対パス stored を絶対 URL に解決してから設定
-      imgEl.src = new URL(stored, location).href;
+        imgEl.src = stored;
       } else {
-      imgEl.src = new URL('../images/default_1.png', location).href;
+        imgEl.src = new URL('../images/default_1.png', location).href;
       }
+
       // 「引き換え」ボタン処理
       btnEx.addEventListener("click", () => {
         btnEx.textContent = "✅ 引き換え済み";
