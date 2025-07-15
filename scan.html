@@ -1,0 +1,43 @@
+<!-- scan.html -->
+<!DOCTYPE html><html lang="ja">
+<head><meta charset="utf-8"/><title>抽選中…</title>
+<style>body{font-size:1.2rem;text-align:center;padding:1rem}</style>
+</head>
+<body>
+  <p>抽選中です…少々お待ちください</p>
+<script type="module">
+  import { initializeApp } 
+    from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+  import { getDatabase, ref, set } 
+    from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
+
+  // ← ご自身の Firebase 設定
+  const firebaseConfig = { /* … */ };
+  const app = initializeApp(firebaseConfig);
+  const db  = getDatabase(app);
+
+  // クエリから qrId と rank を取得
+  const params = new URLSearchParams(location.search);
+  const qrId   = params.get('id');
+  const rank   = params.get('rank');
+
+  // ユーザーID を localStorage に保持
+  let uid = localStorage.getItem('uid');
+  if (!uid) {
+    uid = crypto.randomUUID();
+    localStorage.setItem('uid', uid);
+  }
+
+  // 書き込み → リダイレクト or エラー表示
+  set(ref(db, `scans/${qrId}`), true)
+    .then(()=> set(ref(db, `users/${uid}`), true))
+    .then(()=>{
+      location.replace(`result/${encodeURIComponent(rank)}.html`);
+    })
+    .catch(()=>{
+      document.body.innerHTML =
+        '<p>※このQRは既に抽選済みです。</p>';
+    });
+</script>
+</body>
+</html>
