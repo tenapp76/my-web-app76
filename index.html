@@ -319,10 +319,11 @@
       const rank = `${i+1}等`;
 
       // scan.html 呼び出し用 URL を組み立て
-      const handlerURL =
-        `${location.origin}/scan.html` +
-        `?id=${encodeURIComponent(qrId)}` +
-        `&rank=${encodeURIComponent(rank)}`;
+      // ▶ 正：GitHub Pages のフルパスを使う
+   const handlerURL =
+    "https://tenapp76.github.io/my-web-app76/scan.html" +
+    `?id=${encodeURIComponent(qrId)}` +
+    `&rank=${encodeURIComponent(rank)}`;
 
       // QRCode ライブラリで Data-URL を生成
       const qrcodeImage = await new Promise((resolve, reject) => {
