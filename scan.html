@@ -11,22 +11,19 @@
   import { getDatabase, ref, set } 
     from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
 
-  // ← ご自身の Firebase 設定
-  const firebaseConfig = { /* … */ };
+ // ← ここを Firebase コンソールからコピーした設定で置き換え
+  const firebaseConfig = {
+    apiKey: "AIzaSyAyLd3jvdVXikgOXrni3HwlDNUieeZAhH8",
+    authDomain: "qryf-11545.firebaseapp.com",
+    databaseURL: "https://qryf-11545-default-rtdb.firebaseio.com",
+    projectId: "qryf-11545",
+    storageBucket: "qryf-11545.appspot.com",      // ← ここに注意
+    messagingSenderId: "539005507453",
+    appId: "1:539005507453:web:9faf1d69b175a50ce41e14"
+  };
+  // Firebase 初期化
   const app = initializeApp(firebaseConfig);
   const db  = getDatabase(app);
-
-  // クエリから qrId と rank を取得
-  const params = new URLSearchParams(location.search);
-  const qrId   = params.get('id');
-  const rank   = params.get('rank');
-
-  // ユーザーID を localStorage に保持
-  let uid = localStorage.getItem('uid');
-  if (!uid) {
-    uid = crypto.randomUUID();
-    localStorage.setItem('uid', uid);
-  }
 
   // 書き込み → リダイレクト or エラー表示
   set(ref(db, `scans/${qrId}`), true)
