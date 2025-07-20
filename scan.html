@@ -5,7 +5,7 @@
   <meta charset="utf-8"/>
   <title>抽選中…</title>
   <style>
-    body { font-size:1.2rem; text-align:center; padding:1rem; }
+    body { font-size:1.2rem; text-align:center; padding:1rem }
   </style>
 </head>
 <body>
@@ -28,38 +28,37 @@
       appId: "1:539005507453:web:9faf1d69b175a50ce41e14"
     };
 
-    // Firebase 初期化
+    // 2) Firebase 初期化
     const app = initializeApp(firebaseConfig);
     const db  = getDatabase(app);
 
-    // 2) URL パラメータから qrId と rank を取得
+    // 3) URLパラメータから qrId と rank を取得
     const params = new URLSearchParams(location.search);
     const qrId   = params.get('id');
     const rank   = params.get('rank');
-
     if (!qrId || !rank) {
-      document.body.innerHTML = '<p>パラメータが不正です。</p>';
+      document.body.innerHTML = '<p>❌ パラメータが不正です。</p>';
       throw new Error('Missing id or rank');
     }
 
-    // 3) ユーザー識別 UID の取得／発行
+    // 4) ユーザーID (uid) を localStorage から取得 or 新規発行
     let uid = localStorage.getItem('uid');
     if (!uid) {
       uid = crypto.randomUUID();
       localStorage.setItem('uid', uid);
     }
 
-    // 4) 書き込み → 結果ページへ or エラー表示
+    // 5) Firebase に書き込み → 成功:結果ページへ / 失敗:「既に抽選済み」
     set(ref(db, `scans/${qrId}`), true)
       .then(() => set(ref(db, `users/${uid}`), true))
       .then(() => {
-        // 書き込み成功 → 抽選結果ページへ遷移
+        // 抽選結果ページにリダイレクト
         location.replace(`result/${encodeURIComponent(rank)}.html`);
       })
-      .catch(err => {
-        // 二重スキャンや書き込みエラー時
+      .catch(() => {
+        // 二重スキャン等で書き込み拒否された場合
         document.body.innerHTML =
-          '<p>※このQRは既に抽選済みです。</p>';
+          '<p>※この QR は既に抽選済みです。</p>';
       });
   </script>
 </body>
