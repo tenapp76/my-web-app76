@@ -20,11 +20,7 @@
       margin:1rem auto; padding:1rem;
       max-width:600px; border-radius:8px;
     }
-    /* タイトル＋吹き出し */
-    .title-wrapper { display:flex;
-      align-items:center; justify-content:center;
-      gap:1rem; margin-bottom:1rem;
-    }
+    .title-wrapper { display:flex; align-items:center; justify-content:center; gap:1rem; margin-bottom:1rem; }
     h2.title {
       font-size:2.5rem; font-weight:900;
       background: linear-gradient(45deg,#ff4081,#ff80ab);
@@ -45,17 +41,13 @@
     }
     .speech-bubble::after {
       content:""; position:absolute;
-      top:50%; left:-.7rem;
-      transform:translateY(-50%);
-      border:5px solid transparent;
-      border-right-color:#42a5f5;
+      top:50%; left:-.7rem; transform:translateY(-50%);
+      border:5px solid transparent; border-right-color:#42a5f5;
     }
     .speech-bubble::before {
       content:""; position:absolute;
-      top:50%; left:-.3rem;
-      transform:translateY(-50%);
-      border:3px solid transparent;
-      border-right-color:#fff;
+      top:50%; left:-.3rem; transform:translateY(-50%);
+      border:3px solid transparent; border-right-color:#fff;
     }
     .instruction {
       background:#e3f2fd; border-left:4px solid #42a5f5;
@@ -102,7 +94,6 @@
       position:fixed; top:0; left:0;
       pointer-events:none; z-index:9999;
     }
-    /* ログモーダル */
     #logModal {
       display:none; position:fixed; top:0; left:0;
       width:100%; height:100%;
@@ -127,6 +118,9 @@
     }
   </style>
 
+  <!-- QRCode ライブラリ -->
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.0/build/qrcode.min.js"></script>
+
   <!-- PWA Service Worker -->
   <script>
     if ('serviceWorker' in navigator) {
@@ -136,12 +130,12 @@
       });
     }
   </script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.0/build/qrcode.min.js"></script>
 </head>
 
 <body>
   <canvas id="confettiCanvas"></canvas>
 
-  <!-- 抽選ログモーダル -->
   <div id="logModal" role="dialog" aria-modal="true"
        aria-labelledby="logModalTitle" aria-hidden="true" tabindex="-1">
     <div class="modal-content">
@@ -157,7 +151,6 @@
     </div>
   </div>
 
-  <!-- 設定パネル -->
   <div id="setup">
     <div class="title-wrapper">
       <h2 class="title">QRdeまとめて抽選</h2>
@@ -200,20 +193,16 @@
     <button id="showLogBtn">抽選ログを見る</button>
   </div>
 
-  <!-- BGM -->
-  <audio id="bgm_pop"    src="data/bgm_pop.mp3"    loop></audio>
-  <audio id="bgm_japan"  src="data/bgm_japan.mp3"  loop></audio>
-  <audio id="bgm_fanfare"src="data/bgm_fanfare.mp3"loop></audio>
+  <audio id="bgm_pop"     src="data/bgm_pop.mp3"     loop></audio>
+  <audio id="bgm_japan"   src="data/bgm_japan.mp3"   loop></audio>
+  <audio id="bgm_fanfare" src="data/bgm_fanfare.mp3" loop></audio>
 
-  <!-- Firebase＋ゲーム本体 -->
   <script type="module">
-    // 1) Firebase SDK
-    import { initializeApp }
-      from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
     import { getDatabase, ref, set, onValue }
       from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
 
-    // 2) Firebase 設定（要ご自身の値に置き換え）
+    // Firebase 設定（自分のプロジェクト情報に置き換えてください）
     const firebaseConfig = {
       apiKey: "AIzaSy…",
       authDomain: "qryf-11545.firebaseapp.com",
@@ -224,11 +213,11 @@
       appId: "1:539005507453:web:abcdef123456"
     };
 
-    // 3) Firebase 初期化
+    // Firebase 初期化
     const app = initializeApp(firebaseConfig);
     const db  = getDatabase(app);
 
-    // 4) UID 発行＆ユーザー抽選済み監視
+    // UID 発行 & 抽選済み監視
     let uid = localStorage.getItem('uid');
     if (!uid) {
       uid = crypto.randomUUID();
@@ -239,15 +228,15 @@
       hasDrawn = !!snap.val();
     });
 
-    // 5) QRごと一度きり監視 → 非表示
-    onValue(ref(db, 'scans'), snapshot => {
-      const scans = snapshot.val() || {};
-      document.querySelectorAll('img.qr').forEach(el => {
+    // 既スキャン QR のリアルタイム非表示
+    onValue(ref(db, 'scans'), snap => {
+      const scans = snap.val()||{};
+      document.querySelectorAll('img.qr').forEach(el=>{
         el.style.display = scans[el.dataset.qrId] ? 'none' : '';
       });
     });
 
-    // ゲーム用変数
+    // ゲーム変数
     let qrData = [], qrElements = [], animationFrame;
     const canvas = document.getElementById('confettiCanvas');
     const ctx    = canvas.getContext('2d');
@@ -255,7 +244,7 @@
     canvas.height = window.innerHeight;
     let confetti  = [];
 
-    // ファイルを Base64 に
+    // ファイル→Base64
     function imageToBase64(file) {
       return new Promise((res, rej) => {
         const reader = new FileReader();
@@ -265,7 +254,6 @@
       });
     }
 
-    // 枚数合計を更新し、スタートボタン有効化
     function updateSum() {
       const totalQR = +document.getElementById('qrTotal').value;
       const sum = [...document.querySelectorAll('input[name="count"]')]
@@ -275,13 +263,10 @@
       document.getElementById('startBtn').disabled = (sum !== totalQR);
     }
 
-    // 等級行を追加
     function addProb() {
       const cont = document.getElementById('probSettings');
       const cnt  = cont.children.length;
-      if (cnt >= 10) {
-        alert('等級は最大10までです'); return;
-      }
+      if (cnt >= 10) { alert('等級は最大10までです'); return; }
       const rank = cnt + 1;
       const div  = document.createElement('div');
       div.className = 'prob-setting';
@@ -289,9 +274,7 @@
         <span class="rank-label">${rank}等</span>
         枚数: <input name="count" type="number" value="1" min="1" style="width:60px"> 枚
         結果画像: <input name="resultImage" type="file" accept="image/*">
-        ${rank>1
-          ? `<span class="remove-btn" role="button" tabindex="0">✖</span>`
-          : ``}
+        ${rank>1?`<span class="remove-btn" role="button" tabindex="0">✖</span>`:``}
       `;
       cont.appendChild(div);
       updateSum();
@@ -306,7 +289,6 @@
       }
     }
 
-    // 等級行を削除
     function removeProb(btn) {
       btn.closest('.prob-setting').remove();
       document.querySelectorAll('.prob-setting').forEach((div,i)=>{
@@ -315,77 +297,91 @@
       updateSum();
     }
 
-    // QRデータ生成
     async function generateQRData() {
-      const total = +document.getElementById('qrTotal').value;
-      const groups = [...document.querySelectorAll('.prob-setting')];
-      const counts = groups.map(div=>+div.querySelector('input[name="count"]').value);
-      const sum    = counts.reduce((a,b)=>a+b,0);
-      if (sum!==total) throw new Error('合計枚数が QRコード数と一致していません');
-      const data=[]; let id=1;
-      for (let i=0; i<groups.length; i++) {
-        const cnt = counts[i];
-        const fi  = groups[i].querySelector('input[name="resultImage"]');
-        const defaultImg = `../images/default_${i+1}.png`;
-        const img = fi.files[0]
-          ? await imageToBase64(fi.files[0])
-          : defaultImg;
-        for (let j=0; j<cnt; j++) {
-          const qrId = `qr${id++}`;
-          const rank = `${i+1}等`;
-          data.push({ id:qrId, image:`images/${i+1}等.png`,
-                      resultImage:img, rank:rank });
-        }
-      }
-      return { data };
-    }
+  const total = +document.getElementById('qrTotal').value;
+  const groups = [...document.querySelectorAll('.prob-setting')];
+  const counts = groups.map(div => +div.querySelector('input[name="count"]').value);
+  const sum = counts.reduce((a, b) => a + b, 0);
+  if (sum !== total) throw new Error('合計枚数が QRコード数と一致していません');
 
-    // Confettiアニメ
-    class Confetti {
-      constructor(x,y){
-        this.x=x; this.y=y;
-        this.vx=(Math.random()*4-2);
-        this.vy=(Math.random()*-3-1);
-        this.r = Math.random()*4+2;
-        this.color = `hsl(${Math.random()*360},70%,60%)`;
-      }
-    }
+  const data = [];
+  let id = 1;
+  for (let i = 0; i < groups.length; i++) {
+    const cnt = counts[i];
+    const fi = groups[i].querySelector('input[name="resultImage"]');
+    const defaultImg = `../images/default_${i+1}.png`;
+    const resultImg = fi.files[0]
+      ? await imageToBase64(fi.files[0])
+      : defaultImg;
 
-    // QRオブジェクト
+    for (let j = 0; j < cnt; j++) {
+      const qrId = `qr${id++}`;
+      const rank = `${i+1}等`;
+
+      // scan.html 呼び出し用 URL を組み立て
+      const handlerURL =
+        `${location.origin}/scan.html` +
+        `?id=${encodeURIComponent(qrId)}` +
+        `&rank=${encodeURIComponent(rank)}`;
+
+      // QRCode ライブラリで Data-URL を生成
+      const qrcodeImage = await new Promise((resolve, reject) => {
+        QRCode.toDataURL(
+          handlerURL,
+          { width: 60, margin: 1 },
+          (err, url) => err ? reject(err) : resolve(url)
+        );
+      });
+
+      data.push({
+        id: qrId,
+        image: qrcodeImage,
+        resultImage: resultImg,
+        rank: rank
+      });
+    }
+  }
+  return { data };
+}
+
+
     class QR {
-      constructor(d){
-        this.d=d; this.x=Math.random()*canvas.width;
-        this.y=Math.random()*canvas.height;
-        this.vx=Math.random()*3-1.5; this.vy=Math.random()*3-1.5;
+      constructor(d) {
+        this.d = d;
+        this.x = Math.random()*canvas.width;
+        this.y = Math.random()*canvas.height;
+        this.vx= Math.random()*3-1.5;
+        this.vy= Math.random()*3-1.5;
         this.el=document.createElement('img');
-        this.el.src=d.image; this.el.className='qr';
+        this.el.src=d.image;
+        this.el.className='qr';
         this.el.dataset.qrId=d.id;
         this.el.style.left=this.x+'px';
         this.el.style.top =this.y+'px';
-        this.el.addEventListener('click',()=>this.click());
+        this.el.addEventListener('click', ()=>this.click());
         document.body.appendChild(this.el);
       }
       move(){
-        this.x+=this.vx; this.y+=this.vy; 
+        this.x+=this.vx; this.y+=this.vy; this.vy+=0.02;
         if(this.x<0||this.x>canvas.width-60) this.vx*=-1;
         if(this.y<0||this.y>canvas.height-60) this.vy*=-1;
         this.el.style.left=this.x+'px';
         this.el.style.top =this.y+'px';
       }
       click(){
-        if(hasDrawn){
+        if (hasDrawn) {
           alert('🎉 抽選済みです 🎉'); return;
         }
-        const qrId=this.d.id, rank=this.d.rank;
-        set(ref(db,`scans/${qrId}`),true)
-          .then(()=> set(ref(db,`users/${uid}`),true))
+        const qrId = this.d.id, rank = this.d.rank;
+        set(ref(db, `scans/${qrId}`), true)
+          .then(()=> set(ref(db, `users/${uid}`), true))
           .then(()=>{
             hasDrawn=true;
             this.destroy();
             logDraw(rank);
-            localStorage.setItem('lastResultImage',this.d.resultImage);
-            localStorage.setItem('lastRank',rank);
-            window.open(`result/${encodeURIComponent(rank)}.html`,'_blank');
+            localStorage.setItem('lastResultImage', this.d.resultImage);
+            localStorage.setItem('lastRank', rank);
+            window.open(`result/${encodeURIComponent(rank)}.html`, '_blank');
           })
           .catch(()=>{
             alert('🎉 抽選済みです 🎉');
@@ -394,36 +390,29 @@
       destroy(){ this.el.remove(); }
     }
 
-    // メインアニメ
     function animate(){
       qrElements.forEach(q=>q.move());
       ctx.clearRect(0,0,canvas.width,canvas.height);
-      confetti.forEach(c=>{
-        c.x+=c.vx; c.y+=c.vy; c.vy+=.1;
-        ctx.beginPath(); ctx.arc(c.x,c.y,c.r,0,2*Math.PI);
-        ctx.fillStyle=c.color; ctx.fill();
-      });
-      confetti=confetti.filter(c=>c.y<canvas.height);
-      animationFrame=requestAnimationFrame(animate);
+      animationFrame = requestAnimationFrame(animate);
     }
 
-    // スタート
     async function startGame(){
       document.getElementById('addProbBtn').disabled=true;
       document.body.classList.add('playing');
       document.getElementById('startBtn').disabled=true;
       const bgm=document.getElementById('bgmSelect').value;
-      if(bgm!=='off') document.getElementById('bgm_'+bgm).play();
-      try{
-        const { data }=await generateQRData();
-        qrData=data; qrElements=qrData.map(d=>new QR(d));
+      if (bgm!=='off') document.getElementById('bgm_'+bgm).play();
+      try {
+        const { data } = await generateQRData();
+        qrData = data;
+        qrElements = qrData.map(d=>new QR(d));
         animate();
-      }catch(e){
-        alert(e.message); resetGame();
+      } catch(e) {
+        alert(e.message);
+        resetGame();
       }
     }
 
-    // リセット
     function resetGame(){
       document.getElementById('addProbBtn').disabled=false;
       cancelAnimationFrame(animationFrame);
@@ -433,65 +422,59 @@
         const a=document.getElementById(id);
         a.pause(); a.currentTime=0;
       });
-      // localStorage の抽選フラグは不要に
-      localStorage.removeItem('lastResultImage');
-      localStorage.removeItem('lastRank');
-      localStorage.removeItem('qrLogs');
       document.getElementById('startBtn').disabled=false;
       document.body.classList.remove('playing');
     }
 
-    // ログ記録
     function logDraw(rank){
-      const logs=JSON.parse(localStorage.getItem('qrLogs')||'[]');
-      logs.push({rank,time:new Date().toLocaleString()});
-      localStorage.setItem('qrLogs',JSON.stringify(logs));
+      const logs = JSON.parse(localStorage.getItem('qrLogs')||'[]');
+      logs.push({ rank, time:new Date().toLocaleString() });
+      localStorage.setItem('qrLogs', JSON.stringify(logs));
     }
 
-    // ログ表示
     function showLog(){
       const m=document.getElementById('logModal');
       const logs=JSON.parse(localStorage.getItem('qrLogs')||'[]');
       const tb=m.querySelector('tbody');
-      tb.innerHTML='';
-      if(!logs.length){
-        tb.innerHTML='<tr><td colspan="2">履歴がありません</td></tr>';
+      tb.innerHTML = '';
+      if (!logs.length) {
+        tb.innerHTML = '<tr><td colspan="2">履歴がありません</td></tr>';
       } else {
         logs.forEach(l=>{
           const tr=document.createElement('tr');
-          tr.innerHTML=`<td>${l.rank}</td><td>${l.time}</td>`;
+          tr.innerHTML = `<td>${l.rank}</td><td>${l.time}</td>`;
           tb.appendChild(tr);
         });
       }
       m.setAttribute('aria-hidden','false');
       m.focus(); trapFocus(m);
     }
-    // ログ閉じ
+
     function closeLog(){
       const m=document.getElementById('logModal');
       m.setAttribute('aria-hidden','true');
       document.getElementById('showLogBtn').focus();
     }
-    // モーダルフォーカストラップ
+
     function trapFocus(modal){
       const els=modal.querySelectorAll('button,[tabindex]:not([tabindex="-1"])');
       const first=els[0], last=els[els.length-1];
       modal.onkeydown=e=>{
-        if(e.key==='Escape') return closeLog();
-        if(e.key==='Tab'){
-          if(e.shiftKey&&document.activeElement===first){
+        if (e.key==='Escape') return closeLog();
+        if (e.key==='Tab'){
+          if (e.shiftKey&&document.activeElement===first){
             e.preventDefault(); last.focus();
-          } else if(!e.shiftKey&&document.activeElement===last){
+          } else if (!e.shiftKey&&document.activeElement===last){
             e.preventDefault(); first.focus();
           }
         }
       };
     }
-    // CSV エクスポート
+
     function downloadCsv(){
       const logs=JSON.parse(localStorage.getItem('qrLogs')||'[]');
-      if(!logs.length) return alert('履歴なし');
-      const rows=[['等級','日時'],...logs.map(l=>[l.rank,l.time])];
+      if (!logs.length) return alert('履歴なし');
+      const rows=[['等級','日時'], ...logs.map(l=>[l.rank,l.time])];
       const csv=rows.map(r=>r.map(c=>`"${c}"`).join(',')).join('\r\n');
       const blob=new Blob([csv],{type:'text/csv'});
       const url=URL.createObjectURL(blob);
@@ -500,23 +483,15 @@
       URL.revokeObjectURL(url);
     }
 
-    // イベントリスナー登録
     window.onload = ()=>{
       addProb(); updateSum();
-      document.getElementById('qrTotal')
-        .addEventListener('input', updateSum);
-      document.getElementById('addProbBtn')
-        .addEventListener('click', addProb);
-      document.getElementById('startBtn')
-        .addEventListener('click', startGame);
-      document.getElementById('resetBtn')
-        .addEventListener('click', resetGame);
-      document.getElementById('showLogBtn')
-        .addEventListener('click', showLog);
-      document.getElementById('closeLogBtn')
-        .addEventListener('click', closeLog);
-      document.getElementById('exportCsvBtn')
-        .addEventListener('click', downloadCsv);
+      document.getElementById('qrTotal').addEventListener('input', updateSum);
+      document.getElementById('addProbBtn').addEventListener('click', addProb);
+      document.getElementById('startBtn').addEventListener('click', startGame);
+      document.getElementById('resetBtn').addEventListener('click', resetGame);
+      document.getElementById('showLogBtn').addEventListener('click', showLog);
+      document.getElementById('closeLogBtn').addEventListener('click', closeLog);
+      document.getElementById('exportCsvBtn').addEventListener('click', downloadCsv);
     };
   </script>
 
