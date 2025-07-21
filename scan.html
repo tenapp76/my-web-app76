@@ -50,16 +50,19 @@
 
     // 5) Firebase に書き込み → 成功:結果ページへ / 失敗:「既に抽選済み」
     set(ref(db, `scans/${qrId}`), true)
-      .then(() => set(ref(db, `users/${uid}`), true))
-      .then(() => {
-        // 抽選結果ページにリダイレクト
-        location.replace(`result/${encodeURIComponent(rank)}.html`);
-      })
-      .catch(() => {
-        // 二重スキャン等で書き込み拒否された場合
-        document.body.innerHTML =
-          '<p>※この QR は既に抽選済みです。</p>';
-      });
+    .then(() => {
+      console.log('scans write OK', qrId);
+      return set(ref(db, `users/${uid}`), true);
+    })
+    .then(() => {
+      console.log('users write OK', uid);
+      location.replace(`result/${encodeURIComponent(rank)}.html`);
+    })
+    .catch(err => {
+      console.error('Firebase write failed', err);
+      document.body.innerHTML =
+       '<p>※この QR は既に抽選済みです。</p>';
+    });
   </script>
 </body>
 </html>
