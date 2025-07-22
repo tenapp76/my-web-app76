@@ -199,7 +199,7 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-    import { getDatabase, ref, set, onValue }
+    import { getDatabase, ref, set, onValue, remove }
       from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
 
     // Firebase 設定（自分のプロジェクト情報に置き換えてください）
@@ -414,7 +414,16 @@
       }
     }
 
-    function resetGame(){
+    f+ function resetGame(){
+   // ――― ここから追加 ―――
+   // 全ユーザー／全 QR の状態をクリア
+   remove(ref(db, 'scans'));
+   remove(ref(db, `users/${uid}`));
+   hasDrawn = false;
+   // 必要ならログや lastResult も消す
+   // localStorage.removeItem('lastResultImage');
+   // localStorage.removeItem('lastRank');
+   // ――― ここまで追加 ―――
       document.getElementById('addProbBtn').disabled=false;
       cancelAnimationFrame(animationFrame);
       qrElements.forEach(q=>q.destroy());

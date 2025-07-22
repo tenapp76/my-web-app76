@@ -14,7 +14,7 @@
   <script type="module">
     import { initializeApp }
       from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-    import { getDatabase, ref, set }
+    import { getDatabase, ref, set, get, child }
       from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
 
     // 1) Firebase コンソールからコピーした設定に置き換え
@@ -49,20 +49,28 @@
     }
 
     // 5) Firebase に書き込み → 成功:結果ページへ / 失敗:「既に抽選済み」
-    set(ref(db, `scans/${qrId}`), true)
-    .then(() => {
-      console.log('scans write OK', qrId);
-      return set(ref(db, `users/${uid}`), true);
-    })
-    .then(() => {
-      console.log('users write OK', uid);
-      location.replace(`result/${encodeURIComponent(rank)}.html`);
-    })
-    .catch(err => {
-      console.error('Firebase write failed', err);
-      document.body.innerHTML =
-       '<p>※この QR は既に抽選済みです。</p>';
-    });
+    // ――― ここから追加 ―――
+ const userRef  = ref(db, `users/${uid}`);
+ const scanRef  = ref(db, `scans/${qrId}`);
+
+ get(userRef).then(snapUser => {
+   if (snapUser.exists()) {
+     // 既に抽選済み
+     document.body.innerHTML = '<p>※既に抽選済みです。</p>';
+     return;
+   }
+   // 初回のみ scan と users を書き込む
+   set(scanRef, true)
+     .then(() => set(userRef, true))
+     .then(() => {
+       location.replace(`result/${encodeURIComponent(rank)}.html`);
+     })
+     .catch(err => {
+       console.error(err);
+       document.body.innerHTML = '<p>※この QR は既に抽選済みです。</p>';
+     });
+ })
+ // ――― ここまで追加 ―――
   </script>
 </body>
 </html>
