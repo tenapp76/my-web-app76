@@ -227,7 +227,16 @@
     onValue(ref(db, `users/${uid}`), snap => {
       hasDrawn = !!snap.val();
     });
-
+    // ← ここから “既スキャン QR のリアルタイム非表示” を入れる
+    onValue(ref(db, 'scans'), snapshot => {
+      const scans = snapshot.val() || {};
+      // 画面上の全 QR 要素をチェック
+      document.querySelectorAll('img.qr').forEach(el => {
+        // dataset.qrId で紐づく QR がスキャン済みなら非表示に
+        el.style.display = scans[el.dataset.qrId] ? 'none' : '';
+      });
+    });
+    // ← ここまで
     // 既スキャン QR のリアルタイム非表示
     onValue(ref(db, 'scans'), snap => {
       const scans = snap.val()||{};
