@@ -237,13 +237,6 @@
       });
     });
     // ← ここまで
-    // 既スキャン QR のリアルタイム非表示
-    onValue(ref(db, 'scans'), snap => {
-      const scans = snap.val()||{};
-      document.querySelectorAll('img.qr').forEach(el=>{
-        el.style.display = scans[el.dataset.qrId] ? 'none' : '';
-      });
-    });
 
     // ゲーム変数
     let qrData = [], qrElements = [], animationFrame;
