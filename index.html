@@ -116,6 +116,11 @@
       font-size:.6rem; background:rgba(255,255,255,.7);
       padding:4px 0;
     }
+    .qr.fade-out {
+      transition: opacity 0.5s ease;
+      opacity: 0;
+    }
+
   </style>
 
   <!-- QRCode ライブラリ -->
@@ -163,10 +168,6 @@
       オリジナル結果画像のアップロードをおすすめします。
     </div>
 
-    <div class="warning">
-      <strong>※お願い：</strong>QRコードは何度でも読み取れますが、1人1回の抽選をお願いします。
-    </div>
-
     <label for="qrTotal">QRコード数(50個まで):
       <input type="number" id="qrTotal" value="10" min="1" max="50" required>
     </label>
@@ -198,6 +199,19 @@
   <audio id="bgm_fanfare" src="data/bgm_fanfare.mp3" loop></audio>
 
   <script type="module">
+    // --- 簡易 confetti 発射関数 ---
+  function launchConfetti(x, y) {
+  // confetti: 既存の confetti 配列とループがある想定
+    for (let i = 0; i < 30; i++) {
+     confetti.push({
+      x, y,
+      vx: (Math.random() - 0.5) * 4,
+      vy: (Math.random() - 1.5) * 4,
+      size: Math.random() * 6 + 4,
+      life: 60
+    });
+  }
+}
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
     import { getDatabase, ref, set, onValue, remove }
       from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
@@ -227,16 +241,31 @@
     onValue(ref(db, `users/${uid}`), snap => {
       hasDrawn = !!snap.val();
     });
-    // ← ここから “既スキャン QR のリアルタイム非表示” を入れる
+    // ← Firebase 初期化直後：スキャン監視＋演出付き消去
     onValue(ref(db, 'scans'), snapshot => {
       const scans = snapshot.val() || {};
-      // 画面上の全 QR 要素をチェック
-      document.querySelectorAll('img.qr').forEach(el => {
-        // dataset.qrId で紐づく QR がスキャン済みなら非表示に
-        el.style.display = scans[el.dataset.qrId] ? 'none' : '';
-      });
-    });
-    // ← ここまで
+      qrElements.forEach(qr => {
+        if (scans[qr.id]) {
+    // 対応する <img class="qr" data-qr-id="…"> 要素を取得
+      const el = document.querySelector(`img.qr[data-qr-id="${qr.id}"]`);
+      if (el) {
+    // 1) フェードアウトのクラスを付与
+        el.classList.add('fade-out');
+    // 2) 紙吹雪を打ち上げ
+        const rect = el.getBoundingClientRect();
+        launchConfetti(
+          rect.left + rect.width / 2,
+          rect.top  + rect.height / 2
+        );
+    // 3) アニメーション後に実際に要素を消す
+        setTimeout(() => qr.destroy(), 500);
+      } else {
+    // 万が一要素が取れなければすぐ消す
+        qr.destroy();
+      }
+    }
+  });
+});
 
     // ゲーム変数
     let qrData = [], qrElements = [], animationFrame;
