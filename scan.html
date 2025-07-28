@@ -69,10 +69,10 @@
         }
 
         console.log("→ writing scan record to scans/" + qrId);
-        await set(scanRef, true);
+        await set(ref(db, `scans/${qrId}`), true);
 
         console.log("→ writing user record to users/" + uid);
-        await set(userRef, true);
+        await set(ref(db, `users/${uid}`), true);
 
         console.log("→ redirecting to result page: " + rank);
         location.replace(`result/${encodeURIComponent(rank)}.html`);
