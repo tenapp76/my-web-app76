@@ -165,7 +165,7 @@
     <div class="instruction">
       ※ 各等級(10等まで)の枚数の合計をQRコード数と一致させてスタート。<br>
       ※ 結果画像を選択しない場合はデフォルト画像となります。<br>
-      オリジナル結果画像のアップロードをおすすめします。
+      　 景品画像などオリジナル結果画像のアップロードをおすすめします。
     </div>
 
     <label for="qrTotal">QRコード数(50個まで):
@@ -394,11 +394,13 @@
         document.body.appendChild(this.el);
       }
       move(){
-        this.x+=this.vx; this.y+=this.vy; this.vy+=0.02;
-        if(this.x<0||this.x>canvas.width-60) this.vx*=-1;
-        if(this.y<0||this.y>canvas.height-60) this.vy*=-1;
-        this.el.style.left=this.x+'px';
-        this.el.style.top =this.y+'px';
+        this.x += this.vx;
+        this.y += this.vy;
+     // X軸・Y軸ともに画面端で跳ね返る
+        if (this.x < 0 || this.x > canvas.width  - this.el.width)  this.vx *= -1;
+        if (this.y < 0 || this.y > canvas.height - this.el.height) this.vy *= -1;
+        this.el.style.left = this.x + 'px';
+        this.el.style.top  = this.y + 'px';
       }
       click(){
         if (hasDrawn) {
