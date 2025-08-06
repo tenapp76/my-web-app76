@@ -135,7 +135,6 @@
       });
     }
   </script>
-  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.0/build/qrcode.min.js"></script>
 </head>
 
 <body>
@@ -199,9 +198,10 @@
   <audio id="bgm_fanfare" src="data/bgm_fanfare.mp3" loop></audio>
 
   <script type="module">
-    // --- 簡易 confetti 発射関数 ---
-  function launchConfetti(x, y) {
-  // confetti: 既存の confetti 配列とループがある想定
+   let confetti  = [];
+     // --- 簡易 confetti 発射関数 ---
+   function launchConfetti(x, y) {
+     // confetti: 既存の confetti 配列とループがある想定
     for (let i = 0; i < 30; i++) {
      confetti.push({
       x, y,
@@ -213,8 +213,13 @@
   }
 }
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-    import { getDatabase, ref, set, onValue, remove }
-      from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
+    import { getDatabase, ref, set, onValue, remove, get }
+        from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
+    import {
+      getAuth,
+      signInAnonymously,
+      onAuthStateChanged
+    } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
 
     // Firebase 設定（自分のプロジェクト情報に置き換えてください）
     const firebaseConfig = {
@@ -227,40 +232,45 @@
       appId: "1:539005507453:web:abcdef123456"
     };
 
-    // Firebase 初期化
-    const app = initializeApp(firebaseConfig);
-    const db  = getDatabase(app);
+    // Firebase 初期化 + 匿名認証での一貫した UID 管理
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+const auth = getAuth(app);
 
-    // UID 発行 & 抽選済み監視
-    let uid = localStorage.getItem('uid');
-    if (!uid) {
-      uid = crypto.randomUUID();
-      localStorage.setItem('uid', uid);
-    }
-    let hasDrawn = false;
-    onValue(ref(db, `users/${uid}`), snap => {
-      hasDrawn = !!snap.val();
-    });
-    // ← Firebase 初期化直後：スキャン監視＋演出付き消去
-    onValue(ref(db, 'scans'), snapshot => {
-      const scans = snapshot.val() || {};
-      qrElements.forEach(qr => {
-        if (scans[qr.id]) {
-    // 対応する <img class="qr" data-qr-id="…"> 要素を取得
-      const el = document.querySelector(`img.qr[data-qr-id="${qr.id}"]`);
+let uid = null;
+let hasDrawn = false;
+let authReady = false;
+
+signInAnonymously(auth).catch(err => {
+  console.error("匿名ログイン失敗:", err);
+  alert("認証に失敗しました。再読み込みしてください。");
+});
+
+onAuthStateChanged(auth, user => {
+  if (!user) return;
+  uid = user.uid;
+  authReady = true;
+  onValue(ref(db, `users/${uid}`), snap => {
+    hasDrawn = !!snap.val();
+    evaluateStartButton();
+  });
+});
+
+// スキャン監視＋演出付き消去（元の挙動を引き継ぎ）
+onValue(ref(db, 'scans'), snapshot => {
+  const scans = snapshot.val() || {};
+  qrElements.forEach(qr => {
+    if (scans[qr.d.id]) {
+      const el = document.querySelector(`img.qr[data-qr-id="${qr.d.id}"]`);
       if (el) {
-    // 1) フェードアウトのクラスを付与
         el.classList.add('fade-out');
-    // 2) 紙吹雪を打ち上げ
         const rect = el.getBoundingClientRect();
         launchConfetti(
           rect.left + rect.width / 2,
           rect.top  + rect.height / 2
         );
-    // 3) アニメーション後に実際に要素を消す
         setTimeout(() => qr.destroy(), 500);
       } else {
-    // 万が一要素が取れなければすぐ消す
         qr.destroy();
       }
     }
@@ -273,7 +283,6 @@
     const ctx    = canvas.getContext('2d');
     canvas.width  = window.innerWidth;
     canvas.height = window.innerHeight;
-    let confetti  = [];
 
     // ファイル→Base64
     function imageToBase64(file) {
@@ -291,7 +300,16 @@
         .map(i=>+i.value).reduce((a,b)=>a+b,0);
       document.getElementById('currentSum').textContent = sum;
       document.getElementById('totalQR').textContent   = totalQR;
-      document.getElementById('startBtn').disabled = (sum !== totalQR);
+      evaluateStartButton();
+    }
+    function evaluateStartButton() {
+      const totalQR = +document.getElementById('qrTotal').value;
+      const sum = [...document.querySelectorAll('input[name="count"]')]
+        .map(i => +i.value).reduce((a, b) => a + b, 0);
+      document.getElementById('currentSum').textContent = sum;
+      document.getElementById('totalQR').textContent = totalQR;
+      const ready = authReady && sum === totalQR && !hasDrawn;
+      document.getElementById('startBtn').disabled = !ready;
     }
 
     function addProb() {
@@ -340,7 +358,7 @@
   for (let i = 0; i < groups.length; i++) {
     const cnt = counts[i];
     const fi = groups[i].querySelector('input[name="resultImage"]');
-    const defaultImg = `../images/default_${i+1}.png`;
+    const defaultImg = `images/default_${i+1}.png`;
     const resultImg = fi.files[0]
       ? await imageToBase64(fi.files[0])
       : defaultImg;
@@ -351,20 +369,18 @@
 
       // scan.html 呼び出し用 URL を組み立て
       // ▶ 正：GitHub Pages のフルパスを使う
-   const handlerURL =
-    "https://tenapp76.github.io/my-web-app76/scan.html" +
-    `?id=${encodeURIComponent(qrId)}` +
-    `&rank=${encodeURIComponent(rank)}`;
-
-      // QRCode ライブラリで Data-URL を生成
-      const qrcodeImage = await new Promise((resolve, reject) => {
-        QRCode.toDataURL(
-          handlerURL,
-          { width: 60, margin: 1 },
-          (err, url) => err ? reject(err) : resolve(url)
-        );
-      });
-
+   const handlerURL = new URL('scan.html', location.href);
+    handlerURL.searchParams.set('id', qrId);
+    handlerURL.searchParams.set('rank', rank);
+    // 使うときは
+    const urlStr = handlerURL.toString();
+    const qrcodeImage = await new Promise((resolve, reject) => {
+    QRCode.toDataURL(
+      urlStr,
+      { width: 60, margin: 1 },
+      (err, url) => err ? reject(err) : resolve(url)
+    );
+  });
       data.push({
         id: qrId,
         image: qrcodeImage,
@@ -376,61 +392,112 @@
   return { data };
 }
 
-
     class QR {
-      constructor(d) {
-        this.d = d;
-        this.x = Math.random()*canvas.width;
-        this.y = Math.random()*canvas.height;
-        this.vx= Math.random()*3-1.5;
-        this.vy= Math.random()*3-1.5;
-        this.el=document.createElement('img');
-        this.el.src=d.image;
-        this.el.className='qr';
-        this.el.dataset.qrId=d.id;
-        this.el.style.left=this.x+'px';
-        this.el.style.top =this.y+'px';
-        this.el.addEventListener('click', ()=>this.click());
-        document.body.appendChild(this.el);
-      }
-      move(){
-        this.x += this.vx;
-        this.y += this.vy;
-     // X軸・Y軸ともに画面端で跳ね返る
-        if (this.x < 0 || this.x > canvas.width  - this.el.width)  this.vx *= -1;
-        if (this.y < 0 || this.y > canvas.height - this.el.height) this.vy *= -1;
-        this.el.style.left = this.x + 'px';
-        this.el.style.top  = this.y + 'px';
-      }
-      click(){
-        if (hasDrawn) {
-          alert('🎉 抽選済みです 🎉'); return;
-        }
-        const qrId = this.d.id, rank = this.d.rank;
-        set(ref(db, `scans/${qrId}`), true)
-          .then(()=> set(ref(db, `users/${uid}`), true))
-          .then(()=>{
-            hasDrawn=true;
-            this.destroy();
-            logDraw(rank);
-            localStorage.setItem('lastResultImage', this.d.resultImage);
-            localStorage.setItem('lastRank', rank);
-            window.open(`result/${encodeURIComponent(rank)}.html`, '_blank');
-          })
-          .catch(()=>{
-            alert('🎉 抽選済みです 🎉');
-          });
-      }
-      destroy(){ this.el.remove(); }
+  constructor(d) {
+    this.d = d;
+    this.x = Math.random() * canvas.width;
+    this.y = Math.random() * canvas.height;
+    this.vx = Math.random() * 3 - 1.5;
+    this.vy = Math.random() * 3 - 1.5;
+    this.el = document.createElement('img');
+    this.el.src = d.image;
+    this.el.className = 'qr';
+    this.el.dataset.qrId = d.id;
+    this.el.style.left = this.x + 'px';
+    this.el.style.top = this.y + 'px';
+    this.el.addEventListener('click', () => this.click());
+    document.body.appendChild(this.el);
+  }
+
+  move() {
+    this.x += this.vx;
+    this.y += this.vy;
+    if (this.x < 0 || this.x > canvas.width - this.el.width) this.vx *= -1;
+    if (this.y < 0 || this.y > canvas.height - this.el.height) this.vy *= -1;
+    this.el.style.left = this.x + 'px';
+    this.el.style.top = this.y + 'px';
+  }
+
+  click() {
+    if (!authReady || !uid) {
+      alert('認証中です。少し待ってから再度お試しください。');
+      return;
+    }
+    if (hasDrawn) {
+      alert('既に抽選済みです');
+      return;
     }
 
-    function animate(){
-      qrElements.forEach(q=>q.move());
-      ctx.clearRect(0,0,canvas.width,canvas.height);
-      animationFrame = requestAnimationFrame(animate);
+    const qrId = this.d.id;
+    const rank = this.d.rank;
+    const now = Date.now();
+
+    this.el.style.pointerEvents = 'none';
+
+    set(ref(db, `scans/${qrId}`), {
+      uid: uid,
+      timestamp: now
+    })
+      .then(() => {
+        return set(ref(db, `users/${uid}`), {
+          drawnAt: now,
+          qrId: qrId,
+          rank: rank
+        });
+      })
+      .then(() => {
+        hasDrawn = true;
+        this.destroy();
+        logDraw(rank);
+        localStorage.setItem('lastResultImage', this.d.resultImage);
+        localStorage.setItem('lastRank', rank);
+        window.open(`result/${encodeURIComponent(rank)}.html`, '_blank');
+      })
+      .catch(err => {
+        console.warn('抽選失敗または重複:', err);
+        alert('抽選済みかエラーが発生しました。');
+        this.el.style.pointerEvents = '';
+      });
+  }
+
+  destroy() {
+    this.el.remove();
+  }
+}
+
+   function drawConfetti() {
+      // 生命のあるものだけ残す
+      confetti = confetti.filter(p => p.life > 0);
+      confetti.forEach(p => {
+        p.x += p.vx;
+        p.y += p.vy;
+        p.life--;
+        // 簡易フェード
+        ctx.globalAlpha = Math.max(p.life / 60, 0);
+        ctx.fillStyle = `hsl(${Math.random()*360}, 70%, 70%)`;
+        ctx.fillRect(p.x, p.y, p.size, p.size);
+      });
+      ctx.globalAlpha = 1;
     }
+
+function animate() {
+  qrElements.forEach(q => q.move());
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  drawConfetti();
+  animationFrame = requestAnimationFrame(animate);
+}
 
     async function startGame(){
+        if (!authReady || !uid) {
+    alert('認証中です。少し待ってください。');
+    return;
+  }
+
+  // 既に抽選済みなら早期リターン（必要なら）
+  if (hasDrawn) {
+    alert('既に抽選済みです');
+    return;
+  }
       document.getElementById('addProbBtn').disabled=true;
       document.body.classList.add('playing');
       document.getElementById('startBtn').disabled=true;
@@ -447,28 +514,52 @@
       }
     }
 
-    function resetGame(){
-   // ――― ここから追加 ―――
-   // 全ユーザー／全 QR の状態をクリア
-   remove(ref(db, 'scans'));
-   remove(ref(db, 'users'));      // ここを全クリアに変更
-   hasDrawn = false;
-   // 必要ならログや lastResult も消す
-   // localStorage.removeItem('lastResultImage');
-   // localStorage.removeItem('lastRank');
-   // ――― ここまで追加 ―――
-      document.getElementById('addProbBtn').disabled=false;
-      cancelAnimationFrame(animationFrame);
-      qrElements.forEach(q=>q.destroy());
-      qrElements=[];
-      ['bgm_pop','bgm_japan','bgm_fanfare'].forEach(id=>{
-        const a=document.getElementById(id);
-        a.pause(); a.currentTime=0;
-      });
-      document.getElementById('startBtn').disabled=false;
-      document.body.classList.remove('playing');
+   async function resetGame(full = false) {
+  if (!authReady || !uid) {
+    alert('認証処理中です。少し待ってください。');
+    return;
+  }
+
+  try {
+    // 現在のユーザーの記録を一度だけ取得
+    const userSnap = await get(ref(db, `users/${uid}`));
+    const userData = userSnap.exists() ? userSnap.val() : null;
+
+    // full=true なら、使った QR も解放（scans から除去）
+    if (full && userData && userData.qrId) {
+      await remove(ref(db, `scans/${userData.qrId}`));
     }
 
+    // 自分の抽選記録を消す（ソフトリセット）
+    await remove(ref(db, `users/${uid}`));
+
+    hasDrawn = false;
+
+    // ローカルの結果キャッシュも必要ならクリア
+    // localStorage.removeItem('lastResultImage');
+    // localStorage.removeItem('lastRank');
+
+    // UI 側リセット
+    document.getElementById('addProbBtn').disabled = false;
+    cancelAnimationFrame(animationFrame);
+    qrElements.forEach(q => q.destroy());
+    qrElements = [];
+    ['bgm_pop','bgm_japan','bgm_fanfare'].forEach(id => {
+      const a = document.getElementById(id);
+      if (a) { a.pause(); a.currentTime = 0; }
+    });
+    document.getElementById('startBtn').disabled = false;
+    confetti = [];
+    document.body.classList.remove('playing');
+
+    evaluateStartButton();
+    alert(full ? '完全にリセットしました（使った QR も解除）' : '自分の抽選状態をリセットしました');
+  } catch (err) {
+    console.error('resetGame エラー:', err);
+    alert('リセットに失敗しました。コンソールを確認してください。');
+    evaluateStartButton();
+  }
+}
     function logDraw(rank){
       const logs = JSON.parse(localStorage.getItem('qrLogs')||'[]');
       logs.push({ rank, time:new Date().toLocaleString() });
@@ -531,7 +622,7 @@
       document.getElementById('qrTotal').addEventListener('input', updateSum);
       document.getElementById('addProbBtn').addEventListener('click', addProb);
       document.getElementById('startBtn').addEventListener('click', startGame);
-      document.getElementById('resetBtn').addEventListener('click', resetGame);
+      document.getElementById('resetBtn').addEventListener('click', () => resetGame(false));
       document.getElementById('showLogBtn').addEventListener('click', showLog);
       document.getElementById('closeLogBtn').addEventListener('click', closeLog);
       document.getElementById('exportCsvBtn').addEventListener('click', downloadCsv);
