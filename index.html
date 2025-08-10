@@ -555,8 +555,8 @@ function animate() {
     evaluateStartButton();
     alert(full ? '完全にリセットしました（使った QR も解除）' : '自分の抽選状態をリセットしました');
   } catch (err) {
-    console.error('resetGame エラー:', err);
-    alert('リセットに失敗しました。コンソールを確認してください。');
+    console.error('resetGame エラー:', err?.code, err?.message);
+    alert(`リセットに失敗しました（${err?.code || 'unknown'}）`);
     evaluateStartButton();
   }
 }
