@@ -303,13 +303,24 @@ onValue(ref(db, 'scans'), snapshot => {
       evaluateStartButton();
     }
     function evaluateStartButton() {
-      const totalQR = +document.getElementById('qrTotal').value;
-      const sum = [...document.querySelectorAll('input[name="count"]')]
-        .map(i => +i.value).reduce((a, b) => a + b, 0);
-      document.getElementById('currentSum').textContent = sum;
-      document.getElementById('totalQR').textContent = totalQR;
-      const ready = authReady && sum === totalQR && !hasDrawn;
-      document.getElementById('startBtn').disabled = !ready;
+      const btn = document.getElementById('startBtn');
+
+      // 入力の取り方を幅広く
+      const inputs = [...document.querySelectorAll('input.grade-count, input[name="count"]')];
+      const sum = inputs.reduce((a, i) => a + (+i.value || 0), 0);
+
+      // #qrTotal があるならそれを総数、なければ sum を総数とみなす
+      const totalInput = document.getElementById('qrTotal');
+      const totalQR = totalInput ? (+totalInput.value || 0) : sum;
+
+      // 表示があれば更新（存在チェックつき）
+      const curSumEl = document.getElementById('currentSum');
+      const totalQREl = document.getElementById('totalQR');
+      if (curSumEl) curSumEl.textContent = sum;
+      if (totalQREl) totalQREl.textContent = totalQR;
+
+      const ready = !!authReady && sum > 0 && sum === totalQR && !hasDrawn;
+      btn.disabled = !ready;
     }
 
     function addProb() {
@@ -385,7 +396,8 @@ onValue(ref(db, 'scans'), snapshot => {
         id: qrId,
         image: qrcodeImage,
         resultImage: resultImg,
-        rank: rank
+        rank: rank,
+        handlerURL: urlStr
       });
     }
   }
@@ -428,43 +440,25 @@ onValue(ref(db, 'scans'), snapshot => {
       return;
     }
 
-    const qrId = this.d.id;
-    const rank = this.d.rank;
-    const now = Date.now();
-
     this.el.style.pointerEvents = 'none';
 
-    set(ref(db, `scans/${qrId}`), {
-      uid: uid,
-      timestamp: now
-    })
-      .then(() => {
-        return set(ref(db, `users/${uid}`), {
-          drawnAt: now,
-          qrId: qrId,
-          rank: rank
-        });
-      })
-      .then(() => {
-        hasDrawn = true;
-        this.destroy();
-        logDraw(rank);
-        localStorage.setItem('lastResultImage', this.d.resultImage);
-        localStorage.setItem('lastRank', rank);
-        window.open(`result/${encodeURIComponent(rank)}.html`, '_blank');
-      })
-      .catch(err => {
-        console.warn('抽選失敗または重複:', err);
-        alert('抽選済みかエラーが発生しました。');
-        this.el.style.pointerEvents = '';
-      });
-  }
+  // DB書き込みはしない。scan.html を開くだけ
+  const url = this.d.handlerURL
+    ? this.d.handlerURL
+    : (() => {
+        const u = new URL('scan.html', location.href);
+        u.searchParams.set('id', this.d.id);
+        u.searchParams.set('rank', this.d.rank);
+        return u.toString();
+      })();
 
-  destroy() {
-    this.el.remove();
+  const win = window.open(url, '_blank', 'noopener,noreferrer');
+  if (!win) {
+    // ポップアップブロック時のフォールバック（同タブ遷移）
+    location.href = url;
   }
 }
-
+}
    function drawConfetti() {
       // 生命のあるものだけ残す
       confetti = confetti.filter(p => p.life > 0);
