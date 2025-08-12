@@ -38,6 +38,7 @@
     });
 
     // --- URL パラメータ取得 ---
+    const owner = params.get('owner');
     const params = new URLSearchParams(location.search);
     const qrId   = params.get('id');
     const rank   = params.get('rank');
@@ -74,7 +75,7 @@
           }
           
           console.log("→ writing scan record to scans/" + qrId);
-          await set(scanRef, { uid, timestamp: now });
+          await set(scanRef, { uid, timestamp, timestamp: now });
 
           console.log("→ writing user record to users/" + uid);
           await set(userRef, { drawnAt: now, qrId, rank });

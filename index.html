@@ -213,7 +213,7 @@
   }
 }
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-    import { getDatabase, ref, set, onValue, remove, get }
+    import { getDatabase, ref, set, onValue, remove, get, query, orderByChild, equalTo }
         from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
     import {
       getAuth,
@@ -358,6 +358,7 @@ onValue(ref(db, 'scans'), snapshot => {
     }
 
     async function generateQRData() {
+  const SESSION_ID = crypto.randomUUID();  // グローバルで一度生成
   const total = +document.getElementById('qrTotal').value;
   const groups = [...document.querySelectorAll('.prob-setting')];
   const counts = groups.map(div => +div.querySelector('input[name="count"]').value);
@@ -383,6 +384,8 @@ onValue(ref(db, 'scans'), snapshot => {
    const handlerURL = new URL('scan.html', location.href);
     handlerURL.searchParams.set('id', qrId);
     handlerURL.searchParams.set('rank', rank);
+    handlerURL.searchParams.set('owner', uid);       // ★運営のUIDを埋め込む
+    handlerURL.searchParams.set('sid', SESSION_ID);  // ★任意：ゲーム識別子
     // 使うときは
     const urlStr = handlerURL.toString();
     const qrcodeImage = await new Promise((resolve, reject) => {
@@ -509,49 +512,37 @@ function animate() {
     }
 
    async function resetGame(full = false) {
-  if (!authReady || !uid) {
-    alert('認証処理中です。少し待ってください。');
-    return;
-  }
+  if (!authReady || !uid) { alert('認証処理中です。'); return; }
 
   try {
-    // 現在のユーザーの記録を一度だけ取得
-    const userSnap = await get(ref(db, `users/${uid}`));
-    const userData = userSnap.exists() ? userSnap.val() : null;
-
-    // full=true なら、使った QR も解放（scans から除去）
-    if (full && userData && userData.qrId) {
-      await remove(ref(db, `scans/${userData.qrId}`));
+    if (full) {
+      // あなたが配ったゲームのQR（owner=uid）を全部削除
+      const q = query(ref(db, 'scans'), orderByChild('owner'), equalTo(uid));
+      const snap = await get(q);
+      const tasks = [];
+      snap.forEach(ch => tasks.push(remove(ch.ref)));
+      await Promise.all(tasks);
     }
 
-    // 自分の抽選記録を消す（ソフトリセット）
+    // 自分の抽選記録は常にクリア
     await remove(ref(db, `users/${uid}`));
-
     hasDrawn = false;
 
-    // ローカルの結果キャッシュも必要ならクリア
-    // localStorage.removeItem('lastResultImage');
-    // localStorage.removeItem('lastRank');
-
-    // UI 側リセット
-    document.getElementById('addProbBtn').disabled = false;
+    // UI 片付け
     cancelAnimationFrame(animationFrame);
     qrElements.forEach(q => q.destroy());
     qrElements = [];
-    ['bgm_pop','bgm_japan','bgm_fanfare'].forEach(id => {
-      const a = document.getElementById(id);
-      if (a) { a.pause(); a.currentTime = 0; }
-    });
-    document.getElementById('startBtn').disabled = false;
     confetti = [];
+    ['bgm_pop','bgm_japan','bgm_fanfare'].forEach(id=>{
+      const a=document.getElementById(id); if(a){ a.pause(); a.currentTime=0; }
+    });
     document.body.classList.remove('playing');
-
     evaluateStartButton();
-    alert(full ? '完全にリセットしました（使った QR も解除）' : '自分の抽選状態をリセットしました');
+
+    alert(full ? '完全にリセットしました（QRも解除）' : '自分の抽選状態をリセットしました');
   } catch (err) {
     console.error('resetGame エラー:', err?.code, err?.message);
     alert(`リセットに失敗しました（${err?.code || 'unknown'}）`);
-    evaluateStartButton();
   }
 }
     function logDraw(rank){
