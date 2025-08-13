@@ -455,7 +455,7 @@ onValue(ref(db, 'scans'), snapshot => {
         return u.toString();
       })();
 
-  const win = window.open(url, '_blank', 'noopener,noreferrer');
+  const win = location.href = url;   // ← 同一タブ遷移
   if (!win) {
     // ポップアップブロック時のフォールバック（同タブ遷移）
     location.href = url;
