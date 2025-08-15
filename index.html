@@ -128,13 +128,15 @@
 
   <!-- PWA Service Worker -->
   <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load',()=>{
-        navigator.serviceWorker.register('service-worker.js')
-          .catch(()=>console.warn('SW登録失敗'));
-      });
-    }
-  </script>
+  if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./service-worker.js')
+        .catch(err => console.warn('SW登録失敗:', err));
+    });
+  } else {
+    console.warn('SWはHTTPS/localhostのみ有効。file://では登録しません。');
+  }
+</script>
 </head>
 
 <body>
