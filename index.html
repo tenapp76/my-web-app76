@@ -356,9 +356,12 @@ onValue(ref(db, 'scans'), snapshot => {
       });
       updateSum();
     }
-
+    async function startGame() {
+  if (!authReady || !uid) { alert('認証中です'); return; }
+  if (hasDrawn) { alert('既に抽選済みです'); return; }
+  
     async function generateQRData() {
-  const SESSION_ID = crypto.randomUUID();  // グローバルで一度生成
+  let SESSION_ID = null;
   const total = +document.getElementById('qrTotal').value;
   const groups = [...document.querySelectorAll('.prob-setting')];
   const counts = groups.map(div => +div.querySelector('input[name="count"]').value);
@@ -543,6 +546,7 @@ function animate() {
   } catch (err) {
     console.error('resetGame エラー:', err?.code, err?.message);
     alert(`リセットに失敗しました（${err?.code || 'unknown'}）`);
+    evaluateStartButton();
   }
 }
     function logDraw(rank){

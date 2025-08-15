@@ -75,7 +75,7 @@
           }
           
           console.log("→ writing scan record to scans/" + qrId);
-          await set(scanRef, { uid, timestamp, timestamp: now });
+          await set(ref(db, `scans/${qrId}`), { uid, owner, timestamp: now });
 
           console.log("→ writing user record to users/" + uid);
           await set(userRef, { drawnAt: now, qrId, rank });
