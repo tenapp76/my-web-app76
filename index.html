@@ -39,110 +39,61 @@
       padding:.3rem .8rem; border-radius:8px;
       font-size:.7rem; white-space:nowrap;
     }
-    .speech-bubble::after {
-      content:""; position:absolute;
-      top:50%; left:-.7rem; transform:translateY(-50%);
-      border:5px solid transparent; border-right-color:#42a5f5;
-    }
-    .speech-bubble::before {
-      content:""; position:absolute;
-      top:50%; left:-.3rem; transform:translateY(-50%);
-      border:3px solid transparent; border-right-color:#fff;
-    }
-    .instruction {
-      background:#e3f2fd; border-left:4px solid #42a5f5;
-      padding:.75rem 1rem; border-radius:4px;
-      margin-bottom:1rem; font-size:.95rem; color:#333;
-    }
-    .warning {
-      background:#ffebee; border-left:4px solid #e53935;
-      color:#b71c1c; padding:.75rem 1rem;
-      border-radius:4px; margin-bottom:1rem;
-      font-size:.9rem;
-    }
+    .speech-bubble::after { content:""; position:absolute; top:50%; left:-.7rem; transform:translateY(-50%); border:5px solid transparent; border-right-color:#42a5f5; }
+    .speech-bubble::before{ content:""; position:absolute; top:50%; left:-.3rem; transform:translateY(-50%); border:3px solid transparent; border-right-color:#fff; }
+
+    .instruction { background:#e3f2fd; border-left:4px solid #42a5f5; padding:.75rem 1rem; border-radius:4px; margin-bottom:1rem; font-size:.95rem; color:#333; }
+    .warning { background:#ffebee; border-left:4px solid #e53935; color:#b71c1c; padding:.75rem 1rem; border-radius:4px; margin-bottom:1rem; font-size:.9rem; }
     .warning strong { color:#b71c1c; }
+
     label { display:block; margin:.5rem 0; }
     input[type=number], select { margin-left:.5rem; }
-    .prob-setting {
-      display:flex; align-items:center;
-      background:#f0f0f0; padding:.5rem;
-      margin-bottom:.5rem; border-radius:6px;
-    }
+
+    .prob-setting { display:flex; align-items:center; background:#f0f0f0; padding:.5rem; margin-bottom:.5rem; border-radius:6px; }
     .prob-setting .rank-label { width:3em; font-weight:bold; }
     .prob-setting input[type=number] { width:60px; margin:0 .5rem; }
     .prob-setting input[type=file] { margin-left:.5rem; }
-    .prob-setting .remove-btn {
-      margin-left:auto; cursor:pointer; color:red;
-      font-size:1.2rem;
-    }
-    #countSum { font-weight:bold; margin:.5rem 0; }
-    button {
-      margin:4px; padding:8px 16px;
-      border:none; border-radius:6px;
-      background:#ff4081; color:#fff; cursor:pointer;
-    }
-    button:disabled { opacity:.6; cursor:default; }
-    .qr {
-      position:absolute; width:60px; height:60px;
-      cursor:pointer; transition:opacity .3s;
-    }
-    @media(max-width:600px){
-      .qr { width:50px; height:50px; }
-      button { font-size:.9rem; }
-    }
-    canvas#confettiCanvas {
-      position:fixed; top:0; left:0;
-      pointer-events:none; z-index:9999;
-    }
-    #logModal {
-      display:none; position:fixed; top:0; left:0;
-      width:100%; height:100%;
-      background:rgba(0,0,0,0.6);
-      justify-content:center; align-items:center;
-      z-index:10000;
-    }
-    #logModal[aria-hidden="false"] { display:flex; }
-    #logModal .modal-content {
-      background:#fff; padding:1rem; border-radius:8px;
-      max-width:90%; max-height:80%; overflow:auto;
-    }
-    #logTable { width:100%; border-collapse:collapse; margin-top:.5rem; }
-    #logTable th,#logTable td {
-      border:1px solid #ddd; padding:8px; text-align:center;
-    }
-    footer {
-      position:fixed; bottom:0; left:0;
-      width:100%; text-align:center;
-      font-size:.6rem; background:rgba(255,255,255,.7);
-      padding:4px 0;
-    }
-    .qr.fade-out {
-      transition: opacity 0.5s ease;
-      opacity: 0;
-    }
+    .prob-setting .remove-btn { margin-left:auto; cursor:pointer; color:red; font-size:1.2rem; }
 
+    #countSum { font-weight:bold; margin:.5rem 0; }
+    #countSum[aria-live] { outline:none; }
+
+    button { margin:4px; padding:8px 16px; border:none; border-radius:6px; background:#ff4081; color:#fff; cursor:pointer; }
+    button:disabled { opacity:.6; cursor:default; }
+
+    .qr { position:absolute; width:60px; height:60px; cursor:pointer; transition:opacity .3s; }
+    @media(max-width:600px){ .qr { width:50px; height:50px; } button { font-size:.9rem; } }
+
+    canvas#confettiCanvas { position:fixed; top:0; left:0; pointer-events:none; z-index:9999; }
+
+    #logModal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); justify-content:center; align-items:center; z-index:10000; }
+    #logModal[aria-hidden="false"] { display:flex; }
+    #logModal .modal-content { background:#fff; padding:1rem; border-radius:8px; max-width:90%; max-height:80%; overflow:auto; }
+    #logTable { width:100%; border-collapse:collapse; margin-top:.5rem; }
+    #logTable th,#logTable td { border:1px solid #ddd; padding:8px; text-align:center; }
+
+    footer { position:fixed; bottom:0; left:0; width:100%; text-align:center; font-size:.6rem; background:rgba(255,255,255,.7); padding:4px 0; }
+
+    .qr.fade-out { transition: opacity 0.5s ease; opacity: 0; }
   </style>
 
-  <!-- QRCode ライブラリ -->
+  <!-- QRCode ライブラリ（※二重読み込みを解消） -->
   <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.0/build/qrcode.min.js"></script>
 
-  <!-- PWA Service Worker -->
+  <!-- PWA Service Worker 登録 -->
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load',()=>{
-        navigator.serviceWorker.register('service-worker.js')
-          .catch(()=>console.warn('SW登録失敗'));
+        navigator.serviceWorker.register('service-worker.js').catch(()=>console.warn('SW登録失敗'));
       });
     }
   </script>
-  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.0/build/qrcode.min.js"></script>
 </head>
 
 <body>
   <canvas id="confettiCanvas"></canvas>
 
-  <div id="logModal" role="dialog" aria-modal="true"
-       aria-labelledby="logModalTitle" aria-hidden="true" tabindex="-1">
+  <div id="logModal" role="dialog" aria-modal="true" aria-labelledby="logModalTitle" aria-hidden="true" tabindex="-1">
     <div class="modal-content">
       <h2 id="logModalTitle">抽選ログ</h2>
       <table id="logTable">
@@ -184,7 +135,7 @@
     <div id="probSettings"></div>
     <button id="addProbBtn">等級を追加</button>
 
-    <div id="countSum">
+    <div id="countSum" aria-live="polite">
       合計枚数: <span id="currentSum">0</span> /
       <span id="totalQR">0</span>
     </div>
@@ -194,86 +145,109 @@
     <button id="showLogBtn">抽選ログを見る</button>
   </div>
 
+  <!-- BGM -->
   <audio id="bgm_pop"     src="data/bgm_pop.mp3"     loop></audio>
   <audio id="bgm_japan"   src="data/bgm_japan.mp3"   loop></audio>
   <audio id="bgm_fanfare" src="data/bgm_fanfare.mp3" loop></audio>
 
   <script type="module">
-    // --- 簡易 confetti 発射関数 ---
-  function launchConfetti(x, y) {
-  // confetti: 既存の confetti 配列とループがある想定
-    for (let i = 0; i < 30; i++) {
-     confetti.push({
-      x, y,
-      vx: (Math.random() - 0.5) * 4,
-      vy: (Math.random() - 1.5) * 4,
-      size: Math.random() * 6 + 4,
-      life: 60
-    });
-  }
-}
+    // ===== Firebase =====
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-    import { getDatabase, ref, set, onValue, remove }
-      from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
+    import { getDatabase, ref, set, onValue, remove } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
 
-    // Firebase 設定（自分のプロジェクト情報に置き換えてください）
+    // ★自分のプロジェクトに置き換えてください
     const firebaseConfig = {
-      apiKey: "AIzaSy…",
-      authDomain: "qryf-11545.firebaseapp.com",
-      databaseURL: "https://qryf-11545-default-rtdb.firebaseio.com",
-      projectId: "qryf-11545",
-      storageBucket: "qryf-11545.appspot.com",
-      messagingSenderId: "539005507453",
-      appId: "1:539005507453:web:abcdef123456"
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_PROJECT.firebaseapp.com",
+      databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
+      projectId: "YOUR_PROJECT",
+      storageBucket: "YOUR_PROJECT.appspot.com",
+      messagingSenderId: "",
+      appId: ""
     };
 
-    // Firebase 初期化
     const app = initializeApp(firebaseConfig);
     const db  = getDatabase(app);
 
-    // UID 発行 & 抽選済み監視
+    // ===== ゲーム共通変数 =====
+    const canvas = document.getElementById('confettiCanvas');
+    const ctx    = canvas.getContext('2d');
+    function fitCanvas(){ canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+    fitCanvas();
+    window.addEventListener('resize', fitCanvas);
+
+    let confetti = [];              // 紙吹雪パーティクル
+    let qrData = [], qrElements = []; // 生成QRデータ & 画面上の要素
+    let animationFrame;
+
+    // ===== ユーザー識別 & 抽選済み監視 =====
     let uid = localStorage.getItem('uid');
-    if (!uid) {
-      uid = crypto.randomUUID();
-      localStorage.setItem('uid', uid);
-    }
+    if (!uid) { uid = crypto.randomUUID(); localStorage.setItem('uid', uid); }
     let hasDrawn = false;
-    onValue(ref(db, `users/${uid}`), snap => {
-      hasDrawn = !!snap.val();
-    });
-    // ← Firebase 初期化直後：スキャン監視＋演出付き消去
+    onValue(ref(db, `users/${uid}`), snap => { hasDrawn = !!snap.val(); });
+
+    // ===== 紙吹雪ユーティリティ =====
+    function launchConfetti(x, y) {
+      for (let i = 0; i < 40; i++) {
+        confetti.push({
+          x, y,
+          vx: (Math.random() - 0.5) * 6,
+          vy: (Math.random() - 1.2) * 6,
+          size: Math.random() * 6 + 4,
+          rot: Math.random() * Math.PI,
+          vr: (Math.random()-0.5) * 0.2,
+          life: 70
+        });
+      }
+    }
+
+    function stepConfetti(){
+      for (let i = confetti.length - 1; i >= 0; i--) {
+        const p = confetti[i];
+        p.vy += 0.08;         // 重力
+        p.x  += p.vx;
+        p.y  += p.vy;
+        p.rot += p.vr;
+        p.life--;
+        if (p.life <= 0 || p.y > canvas.height + 40) confetti.splice(i,1);
+      }
+    }
+
+    function drawConfetti(){
+      ctx.save();
+      for (const p of confetti){
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.rot);
+        ctx.globalAlpha = Math.max(0, p.life/70);
+        ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size);
+        ctx.setTransform(1,0,0,1,0,0);
+      }
+      ctx.restore();
+      ctx.globalAlpha = 1;
+    }
+
+    // ===== スキャン状態のリッスン（他端末で読み込まれたQRを即時消す） =====
     onValue(ref(db, 'scans'), snapshot => {
       const scans = snapshot.val() || {};
       qrElements.forEach(qr => {
         if (scans[qr.id]) {
-    // 対応する <img class="qr" data-qr-id="…"> 要素を取得
-      const el = document.querySelector(`img.qr[data-qr-id="${qr.id}"]`);
-      if (el) {
-    // 1) フェードアウトのクラスを付与
-        el.classList.add('fade-out');
-    // 2) 紙吹雪を打ち上げ
-        const rect = el.getBoundingClientRect();
-        launchConfetti(
-          rect.left + rect.width / 2,
-          rect.top  + rect.height / 2
-        );
-    // 3) アニメーション後に実際に要素を消す
-        setTimeout(() => qr.destroy(), 500);
-      } else {
-    // 万が一要素が取れなければすぐ消す
-        qr.destroy();
-      }
-    }
-  });
-});
+          const el = document.querySelector(`img.qr[data-qr-id="${qr.id}"]`);
+          if (el) {
+            el.classList.add('fade-out');
+            const rect = el.getBoundingClientRect();
+            launchConfetti(rect.left + rect.width/2, rect.top + rect.height/2);
+            setTimeout(() => qr.destroy(), 500);
+          } else {
+            qr.destroy();
+          }
+        }
+      });
+    });
 
-    // ゲーム変数
-    let qrData = [], qrElements = [], animationFrame;
-    const canvas = document.getElementById('confettiCanvas');
-    const ctx    = canvas.getContext('2d');
-    canvas.width  = window.innerWidth;
-    canvas.height = window.innerHeight;
-    let confetti  = [];
+    // ===== ユーティリティ =====
+    const $ = sel => document.querySelector(sel);
+    const $$ = sel => [...document.querySelectorAll(sel)];
+    const absUrl = (p) => new URL(p, location.href).href; // ルートに依存しない絶対URL
 
     // ファイル→Base64
     function imageToBase64(file) {
@@ -286,16 +260,15 @@
     }
 
     function updateSum() {
-      const totalQR = +document.getElementById('qrTotal').value;
-      const sum = [...document.querySelectorAll('input[name="count"]')]
-        .map(i=>+i.value).reduce((a,b)=>a+b,0);
-      document.getElementById('currentSum').textContent = sum;
-      document.getElementById('totalQR').textContent   = totalQR;
-      document.getElementById('startBtn').disabled = (sum !== totalQR);
+      const totalQR = +$('#qrTotal').value;
+      const sum = $$('#probSettings input[name="count"]').map(i=>+i.value).reduce((a,b)=>a+b,0);
+      $('#currentSum').textContent = sum;
+      $('#totalQR').textContent   = totalQR;
+      $('#startBtn').disabled = (sum !== totalQR);
     }
 
     function addProb() {
-      const cont = document.getElementById('probSettings');
+      const cont = $('#probSettings');
       const cnt  = cont.children.length;
       if (cnt >= 10) { alert('等級は最大10までです'); return; }
       const rank = cnt + 1;
@@ -308,105 +281,97 @@
         ${rank>1?`<span class="remove-btn" role="button" tabindex="0">✖</span>`:``}
       `;
       cont.appendChild(div);
-      updateSum();
       const countInput = div.querySelector('input[name="count"]');
       countInput.addEventListener('input', updateSum);
       if (rank>1) {
         const btn = div.querySelector('.remove-btn');
         btn.addEventListener('click', ()=>removeProb(btn));
-        btn.addEventListener('keydown', e=>{
-          if (e.key==='Enter'||e.key===' ') removeProb(btn);
-        });
+        btn.addEventListener('keydown', e=>{ if (e.key==='Enter'||e.key===' ') removeProb(btn); });
       }
+      updateSum();
     }
 
     function removeProb(btn) {
       btn.closest('.prob-setting').remove();
-      document.querySelectorAll('.prob-setting').forEach((div,i)=>{
+      $$('#prob-settings .prob-setting');
+      $$('#probSettings .prob-setting').forEach((div,i)=>{
         div.querySelector('.rank-label').textContent = (i+1)+'等';
       });
       updateSum();
     }
 
     async function generateQRData() {
-  const total = +document.getElementById('qrTotal').value;
-  const groups = [...document.querySelectorAll('.prob-setting')];
-  const counts = groups.map(div => +div.querySelector('input[name="count"]').value);
-  const sum = counts.reduce((a, b) => a + b, 0);
-  if (sum !== total) throw new Error('合計枚数が QRコード数と一致していません');
+      const total = +$('#qrTotal').value;
+      const groups = $$('#probSettings .prob-setting');
+      const counts = groups.map(div => +div.querySelector('input[name="count"]').value);
+      const sum = counts.reduce((a, b) => a + b, 0);
+      if (sum !== total) throw new Error('合計枚数が QRコード数と一致していません');
 
-  const data = [];
-  let id = 1;
-  for (let i = 0; i < groups.length; i++) {
-    const cnt = counts[i];
-    const fi = groups[i].querySelector('input[name="resultImage"]');
-    const defaultImg = `../images/default_${i+1}.png`;
-    const resultImg = fi.files[0]
-      ? await imageToBase64(fi.files[0])
-      : defaultImg;
+      const data = [];
+      let id = 1;
+      for (let i = 0; i < groups.length; i++) {
+        const cnt = counts[i];
+        const fi = groups[i].querySelector('input[name="resultImage"]');
+        // ★デフォ画像の相対パスを修正（../ を外す）
+        const defaultImg = `images/default_${i+1}.png`;
+        const resultImg = fi.files[0] ? await imageToBase64(fi.files[0]) : defaultImg;
 
-    for (let j = 0; j < cnt; j++) {
-      const qrId = `qr${id++}`;
-      const rank = `${i+1}等`;
+        for (let j = 0; j < cnt; j++) {
+          const qrId = `qr${id++}`;
+          const rank = `${i+1}等`;
 
-      // scan.html 呼び出し用 URL を組み立て
-      // ▶ 正：GitHub Pages のフルパスを使う
-   const handlerURL =
-    "https://tenapp76.github.io/my-web-app76/scan.html" +
-    `?id=${encodeURIComponent(qrId)}` +
-    `&rank=${encodeURIComponent(rank)}`;
+          // scan.html の絶対URLを自動生成（リポジトリ名や階層に依存しない）
+          const handlerURL = new URL('scan.html', location.href);
+          handlerURL.searchParams.set('id', qrId);
+          handlerURL.searchParams.set('rank', rank);
 
-      // QRCode ライブラリで Data-URL を生成
-      const qrcodeImage = await new Promise((resolve, reject) => {
-        QRCode.toDataURL(
-          handlerURL,
-          { width: 60, margin: 1 },
-          (err, url) => err ? reject(err) : resolve(url)
-        );
-      });
+          const qrcodeImage = await new Promise((resolve, reject) => {
+            QRCode.toDataURL(handlerURL.href, { width: 60, margin: 1 }, (err, url) => err ? reject(err) : resolve(url));
+          });
 
-      data.push({
-        id: qrId,
-        image: qrcodeImage,
-        resultImage: resultImg,
-        rank: rank
-      });
+          data.push({ id: qrId, image: qrcodeImage, resultImage: resultImg, rank });
+        }
+      }
+      return { data };
     }
-  }
-  return { data };
-}
-
 
     class QR {
       constructor(d) {
         this.d = d;
-        this.x = Math.random()*canvas.width;
-        this.y = Math.random()*canvas.height;
-        this.vx= Math.random()*3-1.5;
-        this.vy= Math.random()*3-1.5;
+        this.id = d.id;
+        // 画像サイズの既定値（CSS と一致）
+        this.w = 60; this.h = 60;
+        this.x = Math.random()*Math.max(1,canvas.width  - this.w);
+        this.y = Math.random()*Math.max(1,canvas.height - this.h);
+        this.vx= (Math.random()*3-1.5) || 1;
+        this.vy= (Math.random()*3-1.5) || -1;
         this.el=document.createElement('img');
         this.el.src=d.image;
         this.el.className='qr';
         this.el.dataset.qrId=d.id;
         this.el.style.left=this.x+'px';
         this.el.style.top =this.y+'px';
+        this.el.addEventListener('load', ()=>{
+          const r = this.el.getBoundingClientRect();
+          if (r.width && r.height){ this.w = r.width; this.h = r.height; }
+        });
         this.el.addEventListener('click', ()=>this.click());
+        this.el.addEventListener('pointerdown', ()=>this.click()); // タッチ対応
         document.body.appendChild(this.el);
       }
       move(){
-        this.x += this.vx;
-        this.y += this.vy;
-     // X軸・Y軸ともに画面端で跳ね返る
-        if (this.x < 0 || this.x > canvas.width  - this.el.width)  this.vx *= -1;
-        if (this.y < 0 || this.y > canvas.height - this.el.height) this.vy *= -1;
+        this.x += this.vx; this.y += this.vy;
+        // 画面端で反射（はみ出し補正付き）
+        if (this.x < 0) { this.x = 0; this.vx *= -1; }
+        if (this.y < 0) { this.y = 0; this.vy *= -1; }
+        if (this.x > canvas.width  - this.w) { this.x = canvas.width  - this.w; this.vx *= -1; }
+        if (this.y > canvas.height - this.h){ this.y = canvas.height - this.h; this.vy *= -1; }
         this.el.style.left = this.x + 'px';
         this.el.style.top  = this.y + 'px';
       }
       click(){
-        if (hasDrawn) {
-          alert('🎉 抽選済みです 🎉'); return;
-        }
-        const qrId = this.d.id, rank = this.d.rank;
+        if (hasDrawn) { alert('🎉 抽選済みです 🎉'); return; }
+        const { id:qrId, rank } = this.d;
         set(ref(db, `scans/${qrId}`), true)
           .then(()=> set(ref(db, `users/${uid}`), true))
           .then(()=>{
@@ -415,31 +380,34 @@
             logDraw(rank);
             localStorage.setItem('lastResultImage', this.d.resultImage);
             localStorage.setItem('lastRank', rank);
-            window.open(`result/${encodeURIComponent(rank)}.html`, '_blank');
+            const resultURL = absUrl(`result/${encodeURIComponent(rank)}.html`);
+            window.open(resultURL, '_blank', 'noopener');
           })
-          .catch(()=>{
-            alert('🎉 抽選済みです 🎉');
-          });
+          .catch(()=>{ alert('🎉 抽選済みです 🎉'); });
       }
       destroy(){ this.el.remove(); }
     }
 
     function animate(){
+      // 移動
       qrElements.forEach(q=>q.move());
+      // 紙吹雪
       ctx.clearRect(0,0,canvas.width,canvas.height);
+      stepConfetti();
+      drawConfetti();
       animationFrame = requestAnimationFrame(animate);
     }
 
     async function startGame(){
-      document.getElementById('addProbBtn').disabled=true;
+      $('#addProbBtn').disabled=true;
       document.body.classList.add('playing');
-      document.getElementById('startBtn').disabled=true;
-      const bgm=document.getElementById('bgmSelect').value;
-      if (bgm!=='off') document.getElementById('bgm_'+bgm).play();
+      const bgm=$('#bgmSelect').value;
+      if (bgm!=='off') $('#bgm_'+bgm).play();
       try {
         const { data } = await generateQRData();
         qrData = data;
         qrElements = qrData.map(d=>new QR(d));
+        $('#startBtn').disabled=true; // 多重起動防止
         animate();
       } catch(e) {
         alert(e.message);
@@ -448,24 +416,18 @@
     }
 
     function resetGame(){
-   // ――― ここから追加 ―――
-   // 全ユーザー／全 QR の状態をクリア
-   remove(ref(db, 'scans'));
-   remove(ref(db, 'users'));      // ここを全クリアに変更
-   hasDrawn = false;
-   // 必要ならログや lastResult も消す
-   // localStorage.removeItem('lastResultImage');
-   // localStorage.removeItem('lastRank');
-   // ――― ここまで追加 ―――
-      document.getElementById('addProbBtn').disabled=false;
+      // ★全ユーザー／全QRの状態をクリア（イベント毎の初期化想定）
+      remove(ref(db, 'scans'));
+      remove(ref(db, 'users'));
+      hasDrawn = false;
+
       cancelAnimationFrame(animationFrame);
       qrElements.forEach(q=>q.destroy());
-      qrElements=[];
-      ['bgm_pop','bgm_japan','bgm_fanfare'].forEach(id=>{
-        const a=document.getElementById(id);
-        a.pause(); a.currentTime=0;
-      });
-      document.getElementById('startBtn').disabled=false;
+      qrElements=[]; qrData=[]; confetti=[];
+
+      ['bgm_pop','bgm_japan','bgm_fanfare'].forEach(id=>{ const a=$('#'+id); a.pause(); a.currentTime=0; });
+      $('#addProbBtn').disabled=false;
+      $('#startBtn').disabled=false;
       document.body.classList.remove('playing');
     }
 
@@ -476,7 +438,7 @@
     }
 
     function showLog(){
-      const m=document.getElementById('logModal');
+      const m=$('#logModal');
       const logs=JSON.parse(localStorage.getItem('qrLogs')||'[]');
       const tb=m.querySelector('tbody');
       tb.innerHTML = '';
@@ -494,9 +456,9 @@
     }
 
     function closeLog(){
-      const m=document.getElementById('logModal');
+      const m=$('#logModal');
       m.setAttribute('aria-hidden','true');
-      document.getElementById('showLogBtn').focus();
+      $('#showLogBtn').focus();
     }
 
     function trapFocus(modal){
@@ -505,11 +467,8 @@
       modal.onkeydown=e=>{
         if (e.key==='Escape') return closeLog();
         if (e.key==='Tab'){
-          if (e.shiftKey&&document.activeElement===first){
-            e.preventDefault(); last.focus();
-          } else if (!e.shiftKey&&document.activeElement===last){
-            e.preventDefault(); first.focus();
-          }
+          if (e.shiftKey&&document.activeElement===first){ e.preventDefault(); last.focus(); }
+          else if (!e.shiftKey&&document.activeElement===last){ e.preventDefault(); first.focus(); }
         }
       };
     }
@@ -526,16 +485,17 @@
       URL.revokeObjectURL(url);
     }
 
-    window.onload = ()=>{
+    // ===== init =====
+    window.addEventListener('load', ()=>{
       addProb(); updateSum();
-      document.getElementById('qrTotal').addEventListener('input', updateSum);
-      document.getElementById('addProbBtn').addEventListener('click', addProb);
-      document.getElementById('startBtn').addEventListener('click', startGame);
-      document.getElementById('resetBtn').addEventListener('click', resetGame);
-      document.getElementById('showLogBtn').addEventListener('click', showLog);
-      document.getElementById('closeLogBtn').addEventListener('click', closeLog);
-      document.getElementById('exportCsvBtn').addEventListener('click', downloadCsv);
-    };
+      $('#qrTotal').addEventListener('input', updateSum);
+      $('#addProbBtn').addEventListener('click', addProb);
+      $('#startBtn').addEventListener('click', startGame, { once:false });
+      $('#resetBtn').addEventListener('click', resetGame);
+      $('#showLogBtn').addEventListener('click', showLog);
+      $('#closeLogBtn').addEventListener('click', closeLog);
+      $('#exportCsvBtn').addEventListener('click', downloadCsv);
+    });
   </script>
 
   <footer>
