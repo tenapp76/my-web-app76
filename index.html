@@ -439,32 +439,26 @@ onValue(ref(db, 'scans'), snapshot => {
   }
 
   click() {
-    if (!authReady || !uid) {
-      alert('認証中です。少し待ってから再度お試しください。');
-      return;
-    }
-    if (hasDrawn) {
-      alert('既に抽選済みです');
-      return;
-    }
+  if (!authReady || !uid) { alert('認証中です。少し待ってください。'); return; }
+  if (hasDrawn) { alert('既に抽選済みです'); return; }
 
-    this.el.style.pointerEvents = 'none';
+  this.el.style.pointerEvents = 'none';
 
-  // DB書き込みはしない。scan.html を開くだけ
   const url = this.d.handlerURL
     ? this.d.handlerURL
     : (() => {
         const u = new URL('scan.html', location.href);
         u.searchParams.set('id', this.d.id);
         u.searchParams.set('rank', this.d.rank);
+        // （owner/sid を使っている場合はここで付与）
+        if (typeof SESSION_ID === 'string') u.searchParams.set('sid', SESSION_ID);
+        if (uid) u.searchParams.set('owner', uid);
         return u.toString();
       })();
 
-  const win = location.href = url;   // ← 同一タブ遷移
-  if (!win) {
-    // ポップアップブロック時のフォールバック（同タブ遷移）
-    location.href = url;
-  }
+  const win = window.open(url, '_blank', 'noopener,noreferrer');  // ★新規タブ
+  if (!win) location.href = url; // フォールバック
+}
 }
 }
    function drawConfetti() {
