@@ -1,22 +1,25 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ja">
-<head>
-  <meta charset="utf-8"/>
-  <title>抽選中…</title>
-  <style>
-    body { font-size:1.2rem; text-align:center; padding:1rem }
-  </style>
-</head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>抽選中…</title>
+<style>
+  body { font-size:1.2rem; text-align:center; padding:1rem; font-family:sans-serif }
+  #msg b{font-size:1.4rem}
+  #diag{opacity:.75; font-size:.9rem; margin-top:.5rem}
+  button{padding:.6rem 1rem;border:0;border-radius:8px;background:#ff4081;color:#fff;margin-top:1rem}
+</style>
 <body>
-  <p>抽選中です…少々お待ちください</p>
+  <p id="msg">抽選中です…少々お待ちください</p>
+  <div id="diag"></div>
+  <button id="retryBtn" style="display:none">もう一度</button>
 
   <script type="module">
-    import { initializeApp }
-      from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-    import { getDatabase, ref, set, get }
-      from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+    import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
+    import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
 
-    // --- Firebase 設定 ---
+    // --- Firebase 設定（index.html と同じにする） ---
     const firebaseConfig = {
       apiKey: "AIzaSyAyLd3jvdVXikgOXrni3HwlDNUieeZAhH8",
       authDomain: "qryf-11545.firebaseapp.com",
@@ -26,61 +29,66 @@
       messagingSenderId: "539005507453",
       appId: "1:539005507453:web:9faf1d69b175a50ce41e14"
     };
-    const app = initializeApp(firebaseConfig);
-    const db  = getDatabase(app);
 
-    // --- URL パラメータ取得 ---
+    const app  = initializeApp(firebaseConfig);
+    const db   = getDatabase(app);
+    const auth = getAuth();
+
     const params = new URLSearchParams(location.search);
     const qrId   = params.get('id');
-    const rank   = params.get('rank');
+    const rank   = params.get('rank') || '';
+    const debug  = params.get('debug') === '1';
 
-    // --- UID を生成／取得 ---
-    let uid = localStorage.getItem('uid');
-    if (!uid) {
-      uid = crypto.randomUUID();
-      localStorage.setItem('uid', uid);
+    const msg = document.getElementById('msg');
+    const diag = document.getElementById('diag');
+    const retryBtn = document.getElementById('retryBtn');
+    retryBtn.onclick = ()=> location.reload();
+
+    const showDiag = (lines)=>{ diag.innerHTML = Array.isArray(lines)? lines.map(l=>`<div>${l}</div>`).join('') : String(lines); };
+    const goResult = ()=>{
+      const to = new URL(`result/${encodeURIComponent(rank)}.html`, location.href);
+      location.replace(to.href);
+    };
+
+    if (!qrId || !rank) {
+      msg.innerHTML = '<b style="color:#c62828">エラー：URL に id または rank がありません</b>';
+      showDiag(`URL: <code>${location.href.replace(/</g,'&lt;')}</code>`);
+      retryBtn.style.display = 'inline-block';
+      throw new Error('missing params');
     }
 
-    // --- エラー表示関数 ---
-    function showError(msg) {
-      document.body.innerHTML = `<p style="color:red; font-size:2rem; padding:1rem">⚠️ ${msg}</p>`;
-      console.error(msg);
-    }
+    // --- 匿名認証（Bルール要件） ---
+    signInAnonymously(auth).catch((e)=>{
+      msg.innerHTML = '<b style="color:#c62828">認証に失敗しました</b>';
+      showDiag([`code: <code>${e.code||''}</code>`, `message: <code>${e.message||e}</code>`]);
+      retryBtn.style.display = 'inline-block';
+    });
 
-    (async () => {
+    onAuthStateChanged(auth, async (user)=>{
+      if (!user) return;
+      if (debug) showDiag([`auth OK uid=<code>${user.uid}</code>`, `id=<code>${qrId}</code> rank=<code>${rank}</code>`]);
+
       try {
-        console.log("▶ scan flow start", { qrId, rank, uid });
+        const now = Date.now();
+        // 1) 先着制御: /scans/{qrId} を新規作成（Bルール: {uid, timestamp}）
+        await set(ref(db, `scans/${qrId}`), { uid: user.uid, timestamp: now });
+        // 2) 自分の抽選情報: /users/{uid} に {drawnAt, qrId, rank}
+        await set(ref(db, `users/${user.uid}`), { drawnAt: now, qrId: qrId, rank: rank });
 
-        if (!qrId || !rank) {
-          throw new Error("URL パラメータ id または rank が見つかりません");
+        msg.innerHTML = `🎉 <b>${rank || '当たり'}</b> が出ました！`;
+        setTimeout(goResult, 500);
+      } catch (e) {
+        const code = e.code || '';
+        if (String(code).includes('PERMISSION_DENIED')) {
+          msg.innerHTML = '<b style="color:#c62828">このQRは既に抽選済みです</b>';
+          if (debug) showDiag([`code: <code>${code}</code>`, '原因候補: 先に他端末で確保 / ルール未整合']);
+        } else {
+          msg.innerHTML = '<b style="color:#c62828">エラーが発生しました</b>';
+          if (debug) showDiag([`code: <code>${code}</code>`, `message: <code>${e.message||e}</code>`]);
         }
-
-        const userRef = ref(db, `users/${uid}`);
-        const scanRef = ref(db, `scans/${qrId}`);
-
-        // ← ここを変更
-        console.log("→ checking user at users/" + uid);
-        const snapUser = await get(userRef);
-        console.log("↳ snapUser.exists():", snapUser.exists());
-
-        if (snapUser.exists()) {
-          showError("※既に抽選済みです。");
-          return;
-        }
-
-        console.log("→ writing scan record to scans/" + qrId);
-        await set(ref(db, `scans/${qrId}`), true);
-
-        console.log("→ writing user record to users/" + uid);
-        await set(ref(db, `users/${uid}`), true);
-
-        console.log("→ redirecting to result page: " + rank);
-        location.replace(`result/${encodeURIComponent(rank)}.html`);
-
-      } catch (err) {
-        showError("エラーが発生しました: " + err.message);
+        retryBtn.style.display = 'inline-block';
       }
-    })();
+    });
   </script>
 </body>
 </html>
