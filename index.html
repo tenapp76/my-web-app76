@@ -154,6 +154,7 @@
     // ===== Firebase =====
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
     import { getDatabase, ref, set, onValue, remove } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
+    import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
 
     // ★自分のプロジェクトに置き換えてください
     const firebaseConfig = {
@@ -168,6 +169,34 @@
 
     const app = initializeApp(firebaseConfig);
     const db  = getDatabase(app);
+    const auth = getAuth();
+
+    // ===== 認証（匿名） =====
+    let uid = null;                     // 自分のUID
+    let ownerUid = null;                // オーナーUID（DBから取得）
+    let hasDrawn = false;               // 自分が抽選済みか
+
+    function updateOwnerUI(){
+      const resetBtn = document.getElementById('resetBtn');
+      const isOwner = !!uid && !!ownerUid && uid === ownerUid;
+      resetBtn.disabled = !isOwner;
+      if (!isOwner) resetBtn.title = 'リセットはオーナーのみ可能です'; else resetBtn.title = '';
+    }
+
+    signInAnonymously(auth).catch((e)=>{ console.warn('匿名認証に失敗:', e); });
+
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        uid = user.uid;
+        console.log('[Auth] UID:', uid);
+        // 自分の抽選済み監視（users/$uid にオブジェクトがあれば抽選済み）
+        onValue(ref(db, `users/${uid}`), snap => { hasDrawn = !!snap.val(); });
+        updateOwnerUI();
+      }
+    });
+
+    // オーナーUIDの取得（/config/ownerUid）
+    onValue(ref(db, 'config/ownerUid'), snap => { ownerUid = snap.val(); updateOwnerUI(); });
 
     // ===== ゲーム共通変数 =====
     const canvas = document.getElementById('confettiCanvas');
@@ -179,12 +208,6 @@
     let confetti = [];              // 紙吹雪パーティクル
     let qrData = [], qrElements = []; // 生成QRデータ & 画面上の要素
     let animationFrame;
-
-    // ===== ユーザー識別 & 抽選済み監視 =====
-    let uid = localStorage.getItem('uid');
-    if (!uid) { uid = crypto.randomUUID(); localStorage.setItem('uid', uid); }
-    let hasDrawn = false;
-    onValue(ref(db, `users/${uid}`), snap => { hasDrawn = !!snap.val(); });
 
     // ===== 紙吹雪ユーティリティ =====
     function launchConfetti(x, y) {
@@ -200,7 +223,6 @@
         });
       }
     }
-
     function stepConfetti(){
       for (let i = confetti.length - 1; i >= 0; i--) {
         const p = confetti[i];
@@ -212,7 +234,6 @@
         if (p.life <= 0 || p.y > canvas.height + 40) confetti.splice(i,1);
       }
     }
-
     function drawConfetti(){
       ctx.save();
       for (const p of confetti){
@@ -293,7 +314,6 @@
 
     function removeProb(btn) {
       btn.closest('.prob-setting').remove();
-      $$('#prob-settings .prob-setting');
       $$('#probSettings .prob-setting').forEach((div,i)=>{
         div.querySelector('.rank-label').textContent = (i+1)+'等';
       });
@@ -369,21 +389,28 @@
         this.el.style.left = this.x + 'px';
         this.el.style.top  = this.y + 'px';
       }
-      click(){
+      async click(){
+        if (!uid)  { alert('接続中…数秒後にお試しください'); return; }
         if (hasDrawn) { alert('🎉 抽選済みです 🎉'); return; }
+        const now = Date.now();
         const { id:qrId, rank } = this.d;
-        set(ref(db, `scans/${qrId}`), true)
-          .then(()=> set(ref(db, `users/${uid}`), true))
-          .then(()=>{
-            hasDrawn=true;
-            this.destroy();
-            logDraw(rank);
-            localStorage.setItem('lastResultImage', this.d.resultImage);
-            localStorage.setItem('lastRank', rank);
-            const resultURL = absUrl(`result/${encodeURIComponent(rank)}.html`);
-            window.open(resultURL, '_blank', 'noopener');
-          })
-          .catch(()=>{ alert('🎉 抽選済みです 🎉'); });
+        try {
+          // 先着制御: scans/qrId を新規作成（{uid, timestamp}）
+          await set(ref(db, `scans/${qrId}`), { uid, timestamp: now });
+          // 自分の抽選情報を保存
+          await set(ref(db, `users/${uid}`), { drawnAt: now, qrId, rank });
+
+          hasDrawn=true;
+          this.destroy();
+          logDraw(rank);
+          localStorage.setItem('lastResultImage', this.d.resultImage);
+          localStorage.setItem('lastRank', rank);
+          const resultURL = absUrl(`result/${encodeURIComponent(rank)}.html`);
+          window.open(resultURL, '_blank', 'noopener');
+        } catch(e) {
+          // 既に埋まっている or ルール違反
+          alert('🎉 抽選済みです 🎉');
+        }
       }
       destroy(){ this.el.remove(); }
     }
@@ -399,15 +426,15 @@
     }
 
     async function startGame(){
-      $('#addProbBtn').disabled=true;
+      document.getElementById('addProbBtn').disabled=true;
       document.body.classList.add('playing');
-      const bgm=$('#bgmSelect').value;
-      if (bgm!=='off') $('#bgm_'+bgm).play();
+      const bgm=document.getElementById('bgmSelect').value;
+      if (bgm!=='off') document.getElementById('bgm_'+bgm).play();
       try {
         const { data } = await generateQRData();
         qrData = data;
         qrElements = qrData.map(d=>new QR(d));
-        $('#startBtn').disabled=true; // 多重起動防止
+        document.getElementById('startBtn').disabled=true; // 多重起動防止
         animate();
       } catch(e) {
         alert(e.message);
@@ -415,19 +442,18 @@
       }
     }
 
-    function resetGame(){
-      // ★全ユーザー／全QRの状態をクリア（イベント毎の初期化想定）
-      remove(ref(db, 'scans'));
-      remove(ref(db, 'users'));
-      hasDrawn = false;
+    async function resetGame(){
+      // オーナーのみ全消去（ボタンは非オーナーでは無効化済み）
+      try { await remove(ref(db, 'scans')); } catch(e) { console.warn('scans削除失敗:', e); }
+      try { await remove(ref(db, 'users')); } catch(e) { console.warn('users削除失敗:', e); }
 
       cancelAnimationFrame(animationFrame);
       qrElements.forEach(q=>q.destroy());
       qrElements=[]; qrData=[]; confetti=[];
 
-      ['bgm_pop','bgm_japan','bgm_fanfare'].forEach(id=>{ const a=$('#'+id); a.pause(); a.currentTime=0; });
-      $('#addProbBtn').disabled=false;
-      $('#startBtn').disabled=false;
+      ['bgm_pop','bgm_japan','bgm_fanfare'].forEach(id=>{ const a=document.getElementById(id); a.pause(); a.currentTime=0; });
+      document.getElementById('addProbBtn').disabled=false;
+      document.getElementById('startBtn').disabled=false;
       document.body.classList.remove('playing');
     }
 
@@ -438,7 +464,7 @@
     }
 
     function showLog(){
-      const m=$('#logModal');
+      const m=document.getElementById('logModal');
       const logs=JSON.parse(localStorage.getItem('qrLogs')||'[]');
       const tb=m.querySelector('tbody');
       tb.innerHTML = '';
@@ -456,9 +482,9 @@
     }
 
     function closeLog(){
-      const m=$('#logModal');
+      const m=document.getElementById('logModal');
       m.setAttribute('aria-hidden','true');
-      $('#showLogBtn').focus();
+      document.getElementById('showLogBtn').focus();
     }
 
     function trapFocus(modal){
@@ -488,13 +514,13 @@
     // ===== init =====
     window.addEventListener('load', ()=>{
       addProb(); updateSum();
-      $('#qrTotal').addEventListener('input', updateSum);
-      $('#addProbBtn').addEventListener('click', addProb);
-      $('#startBtn').addEventListener('click', startGame, { once:false });
-      $('#resetBtn').addEventListener('click', resetGame);
-      $('#showLogBtn').addEventListener('click', showLog);
-      $('#closeLogBtn').addEventListener('click', closeLog);
-      $('#exportCsvBtn').addEventListener('click', downloadCsv);
+      document.getElementById('qrTotal').addEventListener('input', updateSum);
+      document.getElementById('addProbBtn').addEventListener('click', addProb);
+      document.getElementById('startBtn').addEventListener('click', startGame, { once:false });
+      document.getElementById('resetBtn').addEventListener('click', resetGame);
+      document.getElementById('showLogBtn').addEventListener('click', showLog);
+      document.getElementById('closeLogBtn').addEventListener('click', closeLog);
+      document.getElementById('exportCsvBtn').addEventListener('click', downloadCsv);
     });
   </script>
 
