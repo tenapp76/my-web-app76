@@ -175,6 +175,7 @@
   let uid = null;       // 自分のUID
   let ownerUid = null;  // オーナーUID（/config/ownerUid）
   let hasDrawn = false; // 自分が抽選済みか
+  const sessionId = Date.now().toString(36) + "-" + Math.random().toString(36).slice(2,8);
 
   function updateOwnerUI(){
     const resetBtn = document.getElementById('resetBtn');
@@ -339,7 +340,7 @@
       const resultImg = fi.files[0] ? await imageToBase64(fi.files[0]) : defaultImg;
 
       for (let j = 0; j < cnt; j++) {
-        const qrId = `qr${id++}`;
+        const qrId = `${sessionId}-qr${id++}`;
         const rank = `${i+1}等`;
 
         // scan.html の絶対URL（配置に依存しない）
