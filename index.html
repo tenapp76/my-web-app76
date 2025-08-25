@@ -172,6 +172,7 @@
   const auth = getAuth();
 
   // ===== 認証（匿名） =====
+  const BASE_URL = "https://tenapp76.github.io/my-web-app76/";
   let uid = null;       // 自分のUID
   let ownerUid = null;  // オーナーUID（/config/ownerUid）
   let hasDrawn = false; // 自分が抽選済みか
@@ -344,10 +345,10 @@
         const rank = `${i+1}等`;
 
         // scan.html の絶対URL（配置に依存しない）
-        const handlerURL = new URL('scan.html', location.href);
+        const handlerURL = new URL('scan.html', BASE_URL);
         handlerURL.searchParams.set('id', qrId);
         handlerURL.searchParams.set('rank', rank);
-        handlerURL.searchParams.set('v', '3'); // ← これを追加（番号は任意）
+        handlerURL.searchParams.set('v', '5'); // キャッシュ回避
 
         const qrcodeImage = await new Promise((resolve, reject) => {
           QRCode.toDataURL(handlerURL.href, { width: 60, margin: 1 }, (err, url) => err ? reject(err) : resolve(url));
