@@ -347,6 +347,7 @@
         const handlerURL = new URL('scan.html', location.href);
         handlerURL.searchParams.set('id', qrId);
         handlerURL.searchParams.set('rank', rank);
+        handlerURL.searchParams.set('v', '3'); // ← これを追加（番号は任意）
 
         const qrcodeImage = await new Promise((resolve, reject) => {
           QRCode.toDataURL(handlerURL.href, { width: 60, margin: 1 }, (err, url) => err ? reject(err) : resolve(url));
