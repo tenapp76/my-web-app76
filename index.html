@@ -185,6 +185,17 @@
     resetBtn.disabled = !isOwner;
     resetBtn.title = isOwner ? "" : "リセットはオーナーのみ可能です";
   }
+  // 状態表示
+  let badge = document.getElementById('ownerBadge');
+  if (!badge) {
+    badge = document.createElement('div');
+    badge.id = 'ownerBadge';
+    badge.style.cssText = 'margin:.5rem 0;color:#555;font-size:.9rem';
+    document.getElementById('setup').prepend(badge);
+  }
+  badge.textContent = isOwner
+    ? `🛠 オーナー: この端末（${uid.slice(0,6)}…）`
+    : `👤 オーナーではありません（owner: ${(ownerUid||'未設定').toString().slice(0,6)}…）`;
 
   await setPersistence(auth, browserLocalPersistence);
   signInAnonymously(auth).catch((e)=>console.warn("匿名認証に失敗:", e));
@@ -454,7 +465,14 @@
 
     try { await remove(ref(db, 'scans')); } catch(e) { console.warn('scans削除失敗:', e); }
     try { await remove(ref(db, 'users')); } catch(e) { console.warn('users削除失敗:', e); }
-
+   
+    // 空のときは自動でオーナーをこの端末に再設定（ルールで空なら許可）
+    try {
+    await set(ref(db, 'config/ownerUid'), uid);
+    console.info('[Owner] ownerUid re-claimed by', uid);
+  } catch (e) {
+    console.info('[Owner] re-claim skipped:', e.code || e);
+  }
     cancelAnimationFrame(animationFrame);
     qrElements.forEach(q=>q.destroy());
     qrElements=[]; qrData=[]; confetti=[];
