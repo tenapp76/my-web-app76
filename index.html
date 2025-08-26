@@ -179,13 +179,13 @@
   const sessionId = Date.now().toString(36) + "-" + Math.random().toString(36).slice(2,8);
 
   function updateOwnerUI(){
-    const resetBtn = document.getElementById('resetBtn');
-    if (!resetBtn) return;
-    const isOwner = !!uid && !!ownerUid && uid === ownerUid;
+  const resetBtn = document.getElementById('resetBtn');
+  const isOwner = !!uid && !!ownerUid && uid === ownerUid;
+  if (resetBtn) {
     resetBtn.disabled = !isOwner;
     resetBtn.title = isOwner ? "" : "リセットはオーナーのみ可能です";
   }
-  // 状態表示
+  // ← ここから移動
   let badge = document.getElementById('ownerBadge');
   if (!badge) {
     badge = document.createElement('div');
@@ -194,11 +194,14 @@
     document.getElementById('setup').prepend(badge);
   }
   badge.textContent = isOwner
-    ? `🛠 オーナー: この端末（${uid.slice(0,6)}…）`
+    ? `🛠 オーナー: この端末（${(uid||'').slice(0,6)}…）`
     : `👤 オーナーではありません（owner: ${(ownerUid||'未設定').toString().slice(0,6)}…）`;
+  // → ここまで
+}
 
-  await setPersistence(auth, browserLocalPersistence);
-  signInAnonymously(auth).catch((e)=>console.warn("匿名認証に失敗:", e));
+setPersistence(auth, browserLocalPersistence)
+  .then(() => signInAnonymously(auth))
+  .catch(e => console.warn("匿名認証に失敗:", e));
 
   // 認証状態
   onAuthStateChanged(auth, (user) => {
