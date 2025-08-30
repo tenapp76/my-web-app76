@@ -143,6 +143,7 @@
     <button id="startBtn" disabled>スタート</button>
     <button id="resetBtn">リセット</button>
     <button id="showLogBtn">抽選ログを見る</button>
+    <button id="claimBtn" style="display:none">オーナーを引き継ぐ</button>
   </div>
 
   <!-- BGM -->
@@ -198,6 +199,27 @@
     : `👤 オーナーではありません（owner: ${(ownerUid||'未設定').toString().slice(0,6)}…）`;
   // → ここまで
 }
+// 空かどうか監視して、空なら“引き継ぎ”ボタンを出す
+const empty = { scans:true, users:true };
+const claimBtn = document.getElementById('claimBtn');
+
+onValue(ref(db, 'scans'), s => { empty.scans = !s.exists(); toggleClaimBtn(); });
+onValue(ref(db, 'users'), s => { empty.users = !s.exists(); toggleClaimBtn(); });
+onValue(ref(db, 'config/ownerUid'), s => { ownerUid = s.val(); updateOwnerUI(); toggleClaimBtn(); });
+
+function toggleClaimBtn(){
+  const canClaim = !!uid && empty.scans && empty.users; // 空なら誰でもOK（ルールで許可）
+  claimBtn.style.display = canClaim ? 'inline-block' : 'none';
+}
+
+claimBtn.addEventListener('click', async ()=>{
+  try {
+    await set(ref(db, 'config/ownerUid'), uid);
+    alert('この端末をオーナーに設定しました');
+  } catch(e){
+    alert('オーナー引き継ぎに失敗: ' + (e.code || e.message));
+  }
+});
 
 setPersistence(auth, browserLocalPersistence)
   .then(() => signInAnonymously(auth))
