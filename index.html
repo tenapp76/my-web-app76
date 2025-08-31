@@ -142,8 +142,8 @@
 
     <button id="startBtn" disabled>スタート</button>
     <button id="resetBtn">リセット</button>
-    <button id="showLogBtn">抽選ログを見る</button>
     <button id="claimBtn" style="display:none">オーナーを引き継ぐ</button>
+    <button id="showLogBtn">抽選ログを見る</button>
   </div>
 
   <!-- BGM -->
@@ -208,18 +208,21 @@ onValue(ref(db, 'users'), s => { empty.users = !s.exists(); toggleClaimBtn(); })
 onValue(ref(db, 'config/ownerUid'), s => { ownerUid = s.val(); updateOwnerUI(); toggleClaimBtn(); });
 
 function toggleClaimBtn(){
+  if (!claimBtn) return;  // ← 追加
   const canClaim = !!uid && empty.scans && empty.users; // 空なら誰でもOK（ルールで許可）
   claimBtn.style.display = canClaim ? 'inline-block' : 'none';
 }
 
-claimBtn.addEventListener('click', async ()=>{
-  try {
-    await set(ref(db, 'config/ownerUid'), uid);
-    alert('この端末をオーナーに設定しました');
-  } catch(e){
-    alert('オーナー引き継ぎに失敗: ' + (e.code || e.message));
-  }
-});
+if (claimBtn) {           // ← 追加
+  claimBtn.addEventListener('click', async ()=>{
+    try {
+      await set(ref(db, 'config/ownerUid'), uid);
+      alert('この端末をオーナーに設定しました');
+    } catch(e){
+      alert('オーナー引き継ぎに失敗: ' + (e.code || e.message));
+    }
+  });
+}
 
 setPersistence(auth, browserLocalPersistence)
   .then(() => signInAnonymously(auth))
@@ -485,9 +488,18 @@ setPersistence(auth, browserLocalPersistence)
   }
 
   async function resetGame(){
-    // オーナー以外は即リターン（UIでも無効化済み）
-    if (uid !== ownerUid) { alert("リセットはオーナーのみ可能です"); return; }
-
+  // まだオーナーでない場合は、まず引き継ぎを試みる（空なら成功するルール）
+    if (uid !== ownerUid) {
+     try {
+       await set(ref(db, 'config/ownerUid'), uid); // 空のときのみ許可
+       ownerUid = uid;
+       updateOwnerUI();
+     } catch (_) {}
+     if (uid !== ownerUid) { // まだ非オーナーなら中断
+       alert("リセットはオーナーのみ可能です（全消し後に『オーナーを引き継ぐ』を押してください）");
+       return;
+     }
+   }
     try { await remove(ref(db, 'scans')); } catch(e) { console.warn('scans削除失敗:', e); }
     try { await remove(ref(db, 'users')); } catch(e) { console.warn('users削除失敗:', e); }
    
