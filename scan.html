@@ -15,80 +15,83 @@
   <button id="retryBtn" style="display:none">もう一度</button>
 
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-    import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
-    import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+  import { getDatabase, ref, get, runTransaction } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
+  import {
+    getAuth, signInAnonymously, onAuthStateChanged,
+    setPersistence, browserLocalPersistence
+  } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
 
-    // --- Firebase 設定（index.html と同じにする） ---
-    const firebaseConfig = {
-      apiKey: "AIzaSyAyLd3jvdVXikgOXrni3HwlDNUieeZAhH8",
-      authDomain: "qryf-11545.firebaseapp.com",
-      databaseURL: "https://qryf-11545-default-rtdb.firebaseio.com",
-      projectId: "qryf-11545",
-      storageBucket: "qryf-11545.firebasestorage.app",
-      messagingSenderId: "539005507453",
-      appId: "1:539005507453:web:9faf1d69b175a50ce41e14"
-    };
+  // --- Firebase 設定（index.html と同じ） ---
+  const firebaseConfig = {
+    apiKey: "AIzaSyAyLd3jvdVXikgOXrni3HwlDNUieeZAhH8",
+    authDomain: "qryf-11545.firebaseapp.com",
+    databaseURL: "https://qryf-11545-default-rtdb.firebaseio.com",
+    projectId: "qryf-11545",
+    storageBucket: "qryf-11545.appspot.com",
+    messagingSenderId: "539005507453",
+    appId: "1:539005507453:web:9faf1d69b175a50ce41e14"
+  };
 
-    const app  = initializeApp(firebaseConfig);
-    const db   = getDatabase(app);
-    const auth = getAuth();
+  // --- 初期化 ---
+  const app  = initializeApp(firebaseConfig);
+  const db   = getDatabase(app);
+  const auth = getAuth(app);
 
-    const params = new URLSearchParams(location.search);
-    const qrId   = params.get('id');
-    const rank   = params.get('rank') || '';
-    const debug  = params.get('debug') === '1';
+  // --- URL パラメータ ---
+  const params = new URLSearchParams(location.search);
+  const qrId = params.get('id');
+  const rank = params.get('rank');
 
-    const msg = document.getElementById('msg');
-    const diag = document.getElementById('diag');
-    const retryBtn = document.getElementById('retryBtn');
-    retryBtn.onclick = ()=> location.reload();
+  // --- 表示ユーティリティ ---
+  const showError = (msg) => {
+    document.body.innerHTML =
+      `<p style="color:#c00;font-size:1.6rem;padding:1rem">⚠️ ${msg}</p>`;
+  };
 
-    const showDiag = (lines)=>{ diag.innerHTML = Array.isArray(lines)? lines.map(l=>`<div>${l}</div>`).join('') : String(lines); };
-    const goResult = ()=>{
-      const to = new URL(`result/${encodeURIComponent(rank)}.html`, location.href);
-      location.replace(to.href);
-    };
+  // --- 匿名ログイン（ローカル永続） ---
+  setPersistence(auth, browserLocalPersistence)
+    .then(() => signInAnonymously(auth))
+    .catch(e => showError("認証エラー: " + (e.code || e.message)));
 
-    if (!qrId || !rank) {
-      msg.innerHTML = '<b style="color:#c62828">エラー：URL に id または rank がありません</b>';
-      showDiag(`URL: <code>${location.href.replace(/</g,'&lt;')}</code>`);
-      retryBtn.style.display = 'inline-block';
-      throw new Error('missing params');
-    }
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) return;
+    if (!qrId || !rank) { showError("URLに id / rank がありません"); return; }
 
-    // --- 匿名認証（Bルール要件） ---
-    signInAnonymously(auth).catch((e)=>{
-      msg.innerHTML = '<b style="color:#c62828">認証に失敗しました</b>';
-      showDiag([`code: <code>${e.code||''}</code>`, `message: <code>${e.message||e}</code>`]);
-      retryBtn.style.display = 'inline-block';
-    });
+    const uid = user.uid;
+    const userRef = ref(db, `users/${uid}`);
+    const scanRef = ref(db, `scans/${qrId}`);
+    const now = Date.now();
 
-    onAuthStateChanged(auth, async (user)=>{
-      if (!user) return;
-      if (debug) showDiag([`auth OK uid=<code>${user.uid}</code>`, `id=<code>${qrId}</code> rank=<code>${rank}</code>`]);
+    try {
+      // ① 既に抽選済みなら即終了
+      const existed = await get(userRef);
+      if (existed.exists()) { showError("※既に抽選済みです。"); return; }
 
-      try {
-        const now = Date.now();
-        // 1) 先着制御: /scans/{qrId} を新規作成（Bルール: {uid, timestamp}）
-        await set(ref(db, `scans/${qrId}`), { uid: user.uid, timestamp: now });
-        // 2) 自分の抽選情報: /users/{uid} に {drawnAt, qrId, rank}
-        await set(ref(db, `users/${user.uid}`), { drawnAt: now, qrId: qrId, rank: rank });
+      // ② users/$uid を “空のときだけ” 作成（原子的）
+      const userTx = await runTransaction(userRef, cur => {
+        if (cur) return cur;                 // 既に存在 → 変更しない
+        return { drawnAt: now, qrId, rank }; // 初回のみ書く
+      });
+      if (!userTx.committed) { showError("※既に抽選済みです。"); return; }
 
-        msg.innerHTML = `🎉 <b>${rank || '当たり'}</b> が出ました！`;
-        setTimeout(goResult, 500);
-      } catch (e) {
-        const code = e.code || '';
-        if (String(code).includes('PERMISSION_DENIED')) {
-          msg.innerHTML = '<b style="color:#c62828">このQRは既に抽選済みです</b>';
-          if (debug) showDiag([`code: <code>${code}</code>`, '原因候補: 先に他端末で確保 / ルール未整合']);
-        } else {
-          msg.innerHTML = '<b style="color:#c62828">エラーが発生しました</b>';
-          if (debug) showDiag([`code: <code>${code}</code>`, `message: <code>${e.message||e}</code>`]);
-        }
-        retryBtn.style.display = 'inline-block';
+      // ③ scans/$qrId も “空のときだけ” 確保（原子的）
+      const scanTx = await runTransaction(scanRef, cur => {
+        if (cur) return cur;               // 先に使われていた
+        return { uid, timestamp: now };
+      });
+      if (!scanTx.committed) {
+        // このQRは他の人に使用済み
+        showError("※このQRコードは使用済みです。別のQRをお試しください。");
+        return;
       }
-    });
-  </script>
+
+      // ④ 結果へ
+      location.replace(`result/${encodeURIComponent(rank)}.html`);
+    } catch (e) {
+      showError("エラーが発生しました: " + (e.code || e.message));
+    }
+  });
+</script>
 </body>
 </html>
