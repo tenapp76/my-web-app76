@@ -12,57 +12,31 @@
       background: url('images/bg_setup.jpg') no-repeat center/cover fixed;
       transition: background .5s ease;
     }
-    body.playing {
-      background: url('images/bg_play.jpg') no-repeat center/cover fixed;
-    }
-    #setup {
-      background: rgba(255,255,255,0.9);
-      margin:1rem auto; padding:1rem;
-      max-width:600px; border-radius:8px;
-    }
-    .title-wrapper { display:flex; align-items:center; justify-content:center; gap:1rem; margin-bottom:1rem; }
-    h2.title {
-      font-size:2.5rem; font-weight:900;
-      background: linear-gradient(45deg,#ff4081,#ff80ab);
-      -webkit-background-clip:text;
-      -webkit-text-fill-color:transparent;
-      text-align:center; margin:1rem 0;
-      animation:shine 2s ease-in-out infinite alternate;
-    }
-    @keyframes shine {
-      from { text-shadow:0 0 10px rgba(255,64,129,0.5); }
-      to   { text-shadow:0 0 20px rgba(255,64,129,1); }
-    }
-    .speech-bubble {
-      position:relative; background:#fff;
-      border:2px solid #42a5f5; color:#333;
-      padding:.3rem .8rem; border-radius:8px;
-      font-size:.7rem; white-space:nowrap;
-    }
-    .speech-bubble::after { content:""; position:absolute; top:50%; left:-.7rem; transform:translateY(-50%); border:5px solid transparent; border-right-color:#42a5f5; }
-    .speech-bubble::before{ content:""; position:absolute; top:50%; left:-.3rem; transform:translateY(-50%); border:3px solid transparent; border-right-color:#fff; }
+    body.playing { background: url('images/bg_play.jpg') no-repeat center/cover fixed; }
+    #setup { background: rgba(255,255,255,0.9); margin:1rem auto; padding:1rem; max-width:680px; border-radius:8px; }
+    .title-wrapper { display:flex; align-items:center; justify-content:space-between; gap:1rem; margin-bottom:.5rem; }
+    h2.title { font-size:2rem; font-weight:900; margin:.2rem 0; }
+    .meta { font-size:.9rem; color:#555; display:flex; gap:1rem; align-items:center; flex-wrap:wrap; }
+    .speech-bubble { font-size:.8rem; color:#333; background:#fff; border:2px solid #42a5f5; padding:.2rem .6rem; border-radius:8px; }
 
-    .instruction { background:#e3f2fd; border-left:4px solid #42a5f5; padding:.75rem 1rem; border-radius:4px; margin-bottom:1rem; font-size:.95rem; color:#333; }
-    .warning { background:#ffebee; border-left:4px solid #e53935; color:#b71c1c; padding:.75rem 1rem; border-radius:4px; margin-bottom:1rem; font-size:.9rem; }
-    .warning strong { color:#b71c1c; }
-
+    .instruction { background:#e3f2fd; border-left:4px solid #42a5f5; padding:.6rem .8rem; border-radius:4px; margin:.6rem 0; font-size:.95rem; color:#333; }
     label { display:block; margin:.5rem 0; }
     input[type=number], select { margin-left:.5rem; }
-
-    .prob-setting { display:flex; align-items:center; background:#f0f0f0; padding:.5rem; margin-bottom:.5rem; border-radius:6px; }
-    .prob-setting .rank-label { width:3em; font-weight:bold; }
-    .prob-setting input[type=number] { width:60px; margin:0 .5rem; }
-    .prob-setting input[type=file] { margin-left:.5rem; }
-    .prob-setting .remove-btn { margin-left:auto; cursor:pointer; color:red; font-size:1.2rem; }
-
     #countSum { font-weight:bold; margin:.5rem 0; }
     #countSum[aria-live] { outline:none; }
 
-    button { margin:4px; padding:8px 16px; border:none; border-radius:6px; background:#ff4081; color:#fff; cursor:pointer; }
+    .prob-setting { display:flex; align-items:center; background:#f7f7f7; padding:.5rem; margin-bottom:.5rem; border-radius:6px; }
+    .prob-setting .rank-label { width:3em; font-weight:bold; }
+    .prob-setting input[type=number] { width:70px; margin:0 .5rem; }
+    .prob-setting input[type=file] { margin-left:.5rem; }
+    .prob-setting .remove-btn { margin-left:auto; cursor:pointer; color:#d00; font-size:1.1rem; }
+
+    button { margin:4px; padding:8px 14px; border:none; border-radius:6px; background:#ff4081; color:#fff; cursor:pointer; }
+    button.secondary { background:#607d8b; }
     button:disabled { opacity:.6; cursor:default; }
 
-    .qr { position:absolute; width:90px; height:90px; cursor:pointer; transition:opacity .3s; }
-    @media(max-width:600px){ .qr { width:50px; height:50px; } button { font-size:.9rem; } }
+    .qr { position:absolute; width:100px; height:100px; cursor:pointer; transition:opacity .3s; image-rendering:pixelated; }
+    @media(max-width:600px){ .qr { width:80px; height:80px; } button { font-size:.9rem; } }
 
     canvas#confettiCanvas { position:fixed; top:0; left:0; pointer-events:none; z-index:9999; }
 
@@ -73,14 +47,13 @@
     #logTable th,#logTable td { border:1px solid #ddd; padding:8px; text-align:center; }
 
     footer { position:fixed; bottom:0; left:0; width:100%; text-align:center; font-size:.6rem; background:rgba(255,255,255,.7); padding:4px 0; }
-
     .qr.fade-out { transition: opacity 0.5s ease; opacity: 0; }
   </style>
 
-  <!-- QRCode ライブラリ（※二重読み込みを解消） -->
+  <!-- QRCode ライブラリ -->
   <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.0/build/qrcode.min.js"></script>
 
-  <!-- PWA Service Worker 登録 -->
+  <!-- PWA Service Worker 登録（任意） -->
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load',()=>{
@@ -93,6 +66,7 @@
 <body>
   <canvas id="confettiCanvas"></canvas>
 
+  <!-- ログモーダル -->
   <div id="logModal" role="dialog" aria-modal="true" aria-labelledby="logModalTitle" aria-hidden="true" tabindex="-1">
     <div class="modal-content">
       <h2 id="logModalTitle">抽選ログ</h2>
@@ -110,13 +84,18 @@
   <div id="setup">
     <div class="title-wrapper">
       <h2 class="title">QRdeまとめて抽選</h2>
-      <span class="speech-bubble">抽選イベントなどにどうぞ</span>
+      <span class="speech-bubble">同時開催OK・誰でも主催OK</span>
+    </div>
+
+    <div class="meta">
+      <span id="ownerBadge">状態: -</span>
+      <span id="eventBadge">イベントID: -</span>
+      <button id="changeEventBtn" class="secondary">イベント切替</button>
     </div>
 
     <div class="instruction">
       ※ 各等級(10等まで)の枚数の合計をQRコード数と一致させてスタート。<br>
-      ※ 結果画像を選択しない場合はデフォルト画像となります。<br>
-      　 景品画像などオリジナル結果画像のアップロードをおすすめします。
+      ※ 結果画像を選択しない場合はデフォルト画像となります。
     </div>
 
     <label for="qrTotal">QRコード数(50個まで):
@@ -136,14 +115,13 @@
     <button id="addProbBtn">等級を追加</button>
 
     <div id="countSum" aria-live="polite">
-      合計枚数: <span id="currentSum">0</span> /
-      <span id="totalQR">0</span>
+      合計枚数: <span id="currentSum">0</span> / <span id="totalQR">0</span>
     </div>
 
     <button id="startBtn" disabled>スタート</button>
     <button id="resetBtn">リセット</button>
     <button id="claimBtn" style="display:none">オーナーを引き継ぐ</button>
-    <button id="showLogBtn">抽選ログを見る</button>
+    <button id="showLogBtn" class="secondary">抽選ログを見る</button>
   </div>
 
   <!-- BGM -->
@@ -152,442 +130,389 @@
   <audio id="bgm_fanfare" src="data/bgm_fanfare.mp3" loop></audio>
 
   <script type="module">
-  // ===== Firebase =====
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-  import { getDatabase, ref, set, onValue, remove } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
-  import { getAuth, signInAnonymously, onAuthStateChanged, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+    // ===== Firebase =====
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+    import { getDatabase, ref, set, onValue, remove } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
+    import { getAuth, signInAnonymously, onAuthStateChanged, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
 
-  // ★ あなたのプロジェクト設定（scan.html と一致させる）
-  const firebaseConfig = {
-    apiKey: "AIzaSyAyLd3jvdVXikgOXrni3HwlDNUieeZAhH8",
-    authDomain: "qryf-11545.firebaseapp.com",
-    databaseURL: "https://qryf-11545-default-rtdb.firebaseio.com",
-    projectId: "qryf-11545",
-    storageBucket: "qryf-11545.appspot.com",
-    messagingSenderId: "539005507453",
-    appId: "1:539005507453:web:9faf1d69b175a50ce41e14"
-  };
+    // ★ あなたのプロジェクト設定（scan.html と一致させる）
+    const firebaseConfig = {
+      apiKey: "AIzaSyAyLd3jvdVXikgOXrni3HwlDNUieeZAhH8",
+      authDomain: "qryf-11545.firebaseapp.com",
+      databaseURL: "https://qryf-11545-default-rtdb.firebaseio.com",
+      projectId: "qryf-11545",
+      storageBucket: "qryf-11545.appspot.com",
+      messagingSenderId: "539005507453",
+      appId: "1:539005507453:web:9faf1d69b175a50ce41e14"
+    };
 
-  const app  = initializeApp(firebaseConfig);
-  const db   = getDatabase(app);
-  const auth = getAuth();
+    const BASE_URL = "https://tenapp76.github.io/my-web-app76/";
 
-  // ===== 認証（匿名） =====
-  const BASE_URL = "https://tenapp76.github.io/my-web-app76/";
-  let uid = null;       // 自分のUID
-  let ownerUid = null;  // オーナーUID（/config/ownerUid）
-  let hasDrawn = false; // 自分が抽選済みか
-  const sessionId = Date.now().toString(36) + "-" + Math.random().toString(36).slice(2,8);
+    const app  = initializeApp(firebaseConfig);
+    const db   = getDatabase(app);
+    const auth = getAuth();
 
-  function updateOwnerUI(){
-  const resetBtn = document.getElementById('resetBtn');
-  const isOwner = !!uid && !!ownerUid && uid === ownerUid;
-  if (resetBtn) {
-    resetBtn.disabled = !isOwner;
-    resetBtn.title = isOwner ? "" : "リセットはオーナーのみ可能です";
-  }
-  // ← ここから移動
-  let badge = document.getElementById('ownerBadge');
-  if (!badge) {
-    badge = document.createElement('div');
-    badge.id = 'ownerBadge';
-    badge.style.cssText = 'margin:.5rem 0;color:#555;font-size:.9rem';
-    document.getElementById('setup').prepend(badge);
-  }
-  badge.textContent = isOwner
-    ? `🛠 オーナー: この端末（${(uid||'').slice(0,6)}…）`
-    : `👤 オーナーではありません（owner: ${(ownerUid||'未設定').toString().slice(0,6)}…）`;
-  // → ここまで
-}
-// 空かどうか監視して、空なら“引き継ぎ”ボタンを出す
-const empty = { scans:true, users:true };
-const claimBtn = document.getElementById('claimBtn');
+    // ===== イベントIDの決定（?ev= / 保存 / 自動生成） =====
+    const urlEv = new URLSearchParams(location.search).get('ev');
+    let eventId = urlEv || localStorage.getItem('eventId') || ('ev-' + Math.random().toString(36).slice(2,8));
+    localStorage.setItem('eventId', eventId);
+    const ER = (p) => ref(db, `events/${eventId}/${p}`);
 
-onValue(ref(db, 'scans'), s => { empty.scans = !s.exists(); toggleClaimBtn(); });
-onValue(ref(db, 'users'), s => { empty.users = !s.exists(); toggleClaimBtn(); });
-onValue(ref(db, 'config/ownerUid'), s => { ownerUid = s.val(); updateOwnerUI(); toggleClaimBtn(); });
+    // バッジ表示
+    const eventBadge = document.getElementById('eventBadge');
+    eventBadge.textContent = `イベントID: ${eventId}`;
+    document.getElementById('changeEventBtn').addEventListener('click', ()=>{
+      const ev = prompt('イベントIDを入力（新規可）', eventId) || eventId;
+      if (ev !== eventId) {
+        const url = new URL(location.href);
+        url.searchParams.set('ev', ev);
+        location.href = url.toString();
+      }
+    });
 
-function toggleClaimBtn(){
-  if (!claimBtn) return;  // ← 追加
-  const canClaim = !!uid && empty.scans && empty.users; // 空なら誰でもOK（ルールで許可）
-  claimBtn.style.display = canClaim ? 'inline-block' : 'none';
-}
+    // ===== 認証（匿名） =====
+    let uid = null;       // 自分のUID
+    let ownerUid = null;  // /events/<ev>/config/ownerUid
+    let hasDrawn = false; // 自分が抽選済みか
+    const sessionId = Date.now().toString(36) + "-" + Math.random().toString(36).slice(2,8);
 
-if (claimBtn) {           // ← 追加
-  claimBtn.addEventListener('click', async ()=>{
-    try {
-      await set(ref(db, 'config/ownerUid'), uid);
-      alert('この端末をオーナーに設定しました');
-    } catch(e){
-      alert('オーナー引き継ぎに失敗: ' + (e.code || e.message));
+    function updateOwnerUI(){
+      const resetBtn = document.getElementById('resetBtn');
+      const isOwner = !!uid && !!ownerUid && uid === ownerUid;
+      if (resetBtn) {
+        resetBtn.disabled = !isOwner;
+        resetBtn.title = isOwner ? "" : "リセットはオーナーのみ可能です";
+      }
+      const badge = document.getElementById('ownerBadge');
+      badge.textContent = isOwner
+        ? `🛠 オーナー: この端末（${(uid||'').slice(0,6)}…）`
+        : `👤 オーナーではありません（owner: ${(ownerUid||'未設定').toString().slice(0,6)}…）`;
     }
-  });
-}
 
-setPersistence(auth, browserLocalPersistence)
-  .then(() => signInAnonymously(auth))
-  .catch(e => console.warn("匿名認証に失敗:", e));
+    // 空かどうか監視して、空なら“引き継ぎ”ボタンを出す
+    const empty = { scans:true, users:true };
+    const claimBtn = document.getElementById('claimBtn');
 
-  // 認証状態
-  onAuthStateChanged(auth, (user) => {
-    if (!user) return;
-    uid = user.uid;
-    console.log("[Auth] UID:", uid);
-    // 自分の抽選済み監視（users/$uid にオブジェクトがあれば抽選済み）
-    onValue(ref(db, `users/${uid}`), snap => { hasDrawn = !!snap.val(); });
-    updateOwnerUI();
-  });
+    function toggleClaimBtn(){
+      if (!claimBtn) return;
+      const canClaim = !!uid && empty.scans && empty.users; // 空なら誰でもOK（ルールで許可）
+      claimBtn.style.display = canClaim ? 'inline-block' : 'none';
+    }
 
-  // オーナーUIDの取得
-  onValue(ref(db, "config/ownerUid"), snap => { ownerUid = snap.val(); updateOwnerUI(); });
+    onValue(ER('scans'), s => { empty.scans = !s.exists(); toggleClaimBtn(); });
+    onValue(ER('users'), s => { empty.users = !s.exists(); toggleClaimBtn(); });
 
-  // ===== ゲーム共通変数 =====
-  const canvas = document.getElementById('confettiCanvas');
-  const ctx    = canvas.getContext('2d');
-  function fitCanvas(){ canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
-  fitCanvas();
-  window.addEventListener('resize', fitCanvas);
+    onValue(ER('config/ownerUid'), s => { ownerUid = s.val(); updateOwnerUI(); toggleClaimBtn(); });
 
-  let confetti = [];                 // 紙吹雪パーティクル
-  let qrData = [], qrElements = [];  // 生成QRデータ & 画面上のQR
-  let animationFrame;
+    claimBtn.addEventListener('click', async ()=>{
+      try {
+        await set(ER('config/ownerUid'), uid);
+        alert('この端末をオーナーに設定しました');
+      } catch(e){
+        alert('オーナー引き継ぎに失敗: ' + (e.code || e.message));
+      }
+    });
 
-  // ===== 紙吹雪ユーティリティ =====
-  function launchConfetti(x, y) {
-    for (let i = 0; i < 40; i++) {
-      confetti.push({
-        x, y,
-        vx: (Math.random() - 0.5) * 6,
-        vy: (Math.random() - 1.2) * 6,
-        size: Math.random() * 6 + 4,
-        rot: Math.random() * Math.PI,
-        vr: (Math.random()-0.5) * 0.2,
-        life: 70
+    setPersistence(auth, browserLocalPersistence)
+      .then(() => signInAnonymously(auth))
+      .catch(e => console.warn("匿名認証に失敗:", e));
+
+    onAuthStateChanged(auth, (user) => {
+      if (!user) return;
+      uid = user.uid;
+      onValue(ER(`users/${uid}`), snap => { hasDrawn = !!snap.val(); });
+      updateOwnerUI();
+    });
+
+    // ===== キャンバス & 紙吹雪 =====
+    const canvas = document.getElementById('confettiCanvas');
+    const ctx    = canvas.getContext('2d');
+    function fitCanvas(){ canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+    fitCanvas(); window.addEventListener('resize', fitCanvas);
+
+    let confetti = []; let qrData = [], qrElements = []; let animationFrame;
+    function launchConfetti(x, y) {
+      for (let i = 0; i < 40; i++) {
+        confetti.push({ x, y, vx:(Math.random()-0.5)*6, vy:(Math.random()-1.2)*6, size:Math.random()*6+4, rot:Math.random()*Math.PI, vr:(Math.random()-0.5)*0.2, life:70 });
+      }
+    }
+    function stepConfetti(){
+      for (let i = confetti.length - 1; i >= 0; i--) {
+        const p = confetti[i];
+        p.vy += 0.08; p.x += p.vx; p.y += p.vy; p.rot += p.vr; p.life--;
+        if (p.life <= 0 || p.y > canvas.height + 40) confetti.splice(i,1);
+      }
+    }
+    function drawConfetti(){
+      ctx.save();
+      for (const p of confetti){ ctx.translate(p.x,p.y); ctx.rotate(p.rot); ctx.globalAlpha = Math.max(0, p.life/70); ctx.fillRect(-p.size/2,-p.size/2,p.size,p.size); ctx.setTransform(1,0,0,1,0,0); }
+      ctx.restore(); ctx.globalAlpha = 1;
+    }
+
+    // スキャン状態のリッスン（他端末で読み込まれたQRを即時消す）
+    onValue(ER('scans'), snapshot => {
+      const scans = snapshot.val() || {};
+      qrElements.forEach(qr => {
+        if (scans[qr.id]) {
+          const el = document.querySelector(`img.qr[data-qr-id="${qr.id}"]`);
+          if (el) {
+            el.classList.add('fade-out');
+            const rect = el.getBoundingClientRect();
+            launchConfetti(rect.left + rect.width/2, rect.top + rect.height/2);
+            setTimeout(() => qr.destroy(), 500);
+          } else {
+            qr.destroy();
+          }
+        }
+      });
+    });
+
+    // ===== ユーティリティ =====
+    const $  = sel => document.querySelector(sel);
+    const $$ = sel => [...document.querySelectorAll(sel)];
+    const absUrl = (p) => new URL(p, location.href).href;
+
+    function imageToBase64(file) {
+      return new Promise((res, rej) => {
+        const reader = new FileReader();
+        reader.onload  = ()=>res(reader.result);
+        reader.onerror = rej;
+        reader.readAsDataURL(file);
       });
     }
-  }
-  function stepConfetti(){
-    for (let i = confetti.length - 1; i >= 0; i--) {
-      const p = confetti[i];
-      p.vy += 0.08; // 重力
-      p.x  += p.vx;
-      p.y  += p.vy;
-      p.rot += p.vr;
-      p.life--;
-      if (p.life <= 0 || p.y > canvas.height + 40) confetti.splice(i,1);
-    }
-  }
-  function drawConfetti(){
-    ctx.save();
-    for (const p of confetti){
-      ctx.translate(p.x, p.y);
-      ctx.rotate(p.rot);
-      ctx.globalAlpha = Math.max(0, p.life/70);
-      ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size);
-      ctx.setTransform(1,0,0,1,0,0);
-    }
-    ctx.restore();
-    ctx.globalAlpha = 1;
-  }
 
-  // ===== スキャン状態のリッスン（他端末で読み込まれたQRを即時消す） =====
-  onValue(ref(db, 'scans'), snapshot => {
-    const scans = snapshot.val() || {};
-    qrElements.forEach(qr => {
-      if (scans[qr.id]) {
-        const el = document.querySelector(`img.qr[data-qr-id="${qr.id}"]`);
-        if (el) {
-          el.classList.add('fade-out');
-          const rect = el.getBoundingClientRect();
-          launchConfetti(rect.left + rect.width/2, rect.top + rect.height/2);
-          setTimeout(() => qr.destroy(), 500);
-        } else {
-          qr.destroy();
+    function updateSum() {
+      const totalQR = +$('#qrTotal').value;
+      const sum = $$('#probSettings input[name="count"]').map(i=>+i.value).reduce((a,b)=>a+b,0);
+      $('#currentSum').textContent = sum; $('#totalQR').textContent = totalQR;
+      $('#startBtn').disabled = (sum !== totalQR);
+    }
+
+    function addProb() {
+      const cont = $('#probSettings');
+      const cnt  = cont.children.length;
+      if (cnt >= 10) { alert('等級は最大10までです'); return; }
+      const rank = cnt + 1;
+      const div  = document.createElement('div');
+      div.className = 'prob-setting';
+      div.innerHTML = `
+        <span class="rank-label">${rank}等</span>
+        枚数: <input name="count" type="number" value="1" min="1" style="width:70px"> 枚
+        結果画像: <input name="resultImage" type="file" accept="image/*">
+        ${rank>1?`<span class="remove-btn" role="button" tabindex="0">✖</span>`:``}
+      `;
+      cont.appendChild(div);
+      const countInput = div.querySelector('input[name="count"]');
+      countInput.addEventListener('input', updateSum);
+      if (rank>1) {
+        const btn = div.querySelector('.remove-btn');
+        btn.addEventListener('click', ()=>removeProb(btn));
+        btn.addEventListener('keydown', e=>{ if (e.key==='Enter'||e.key===' ') removeProb(btn); });
+      }
+      updateSum();
+    }
+
+    function removeProb(btn) {
+      btn.closest('.prob-setting').remove();
+      $$('#probSettings .prob-setting').forEach((div,i)=>{ div.querySelector('.rank-label').textContent = (i+1)+'等'; });
+      updateSum();
+    }
+
+    async function generateQRData() {
+      const total = +$('#qrTotal').value;
+      const groups = $$('#probSettings .prob-setting');
+      const counts = groups.map(div => +div.querySelector('input[name="count"]').value);
+      const sum = counts.reduce((a, b) => a + b, 0);
+      if (sum !== total) throw new Error('合計枚数が QRコード数と一致していません');
+
+      const data = [];
+      let id = 1;
+      for (let i = 0; i < groups.length; i++) {
+        const cnt = counts[i];
+        const fi = groups[i].querySelector('input[name="resultImage"]');
+        const defaultImg = `images/default_${i+1}.png`;
+        const resultImg = fi.files[0] ? await imageToBase64(fi.files[0]) : defaultImg;
+
+        for (let j = 0; j < cnt; j++) {
+          const qrId = `${sessionId}-qr${id++}`;
+          const rank = `${i+1}等`;
+
+          const handlerURL = new URL('scan.html', BASE_URL);
+          handlerURL.searchParams.set('id', qrId);
+          handlerURL.searchParams.set('rank', rank);
+          handlerURL.searchParams.set('ev', eventId);   // イベントIDを埋め込む
+          handlerURL.searchParams.set('v', '5');
+
+          const qrcodeImage = await new Promise((resolve, reject) => {
+            QRCode.toDataURL(handlerURL.href, { width: 256, margin: 2, errorCorrectionLevel: 'M' },
+              (err, url) => err ? reject(err) : resolve(url));
+          });
+
+          data.push({ id: qrId, image: qrcodeImage, resultImage: resultImg, rank });
         }
       }
-    });
-  });
-
-  // ===== ユーティリティ =====
-  const $  = sel => document.querySelector(sel);
-  const $$ = sel => [...document.querySelectorAll(sel)];
-  const absUrl = (p) => new URL(p, location.href).href; // ルートに依存しない絶対URL
-
-  // ファイル→Base64
-  function imageToBase64(file) {
-    return new Promise((res, rej) => {
-      const reader = new FileReader();
-      reader.onload  = ()=>res(reader.result);
-      reader.onerror = rej;
-      reader.readAsDataURL(file);
-    });
-  }
-
-  function updateSum() {
-    const totalQR = +$('#qrTotal').value;
-    const sum = $$('#probSettings input[name="count"]').map(i=>+i.value).reduce((a,b)=>a+b,0);
-    $('#currentSum').textContent = sum;
-    $('#totalQR').textContent   = totalQR;
-    $('#startBtn').disabled = (sum !== totalQR);
-  }
-
-  function addProb() {
-    const cont = $('#probSettings');
-    const cnt  = cont.children.length;
-    if (cnt >= 10) { alert('等級は最大10までです'); return; }
-    const rank = cnt + 1;
-    const div  = document.createElement('div');
-    div.className = 'prob-setting';
-    div.innerHTML = `
-      <span class="rank-label">${rank}等</span>
-      枚数: <input name="count" type="number" value="1" min="1" style="width:60px"> 枚
-      結果画像: <input name="resultImage" type="file" accept="image/*">
-      ${rank>1?`<span class="remove-btn" role="button" tabindex="0">✖</span>`:``}
-    `;
-    cont.appendChild(div);
-    const countInput = div.querySelector('input[name="count"]');
-    countInput.addEventListener('input', updateSum);
-    if (rank>1) {
-      const btn = div.querySelector('.remove-btn');
-      btn.addEventListener('click', ()=>removeProb(btn));
-      btn.addEventListener('keydown', e=>{ if (e.key==='Enter'||e.key===' ') removeProb(btn); });
+      return { data };
     }
-    updateSum();
-  }
 
-  function removeProb(btn) {
-    btn.closest('.prob-setting').remove();
-    $$('#probSettings .prob-setting').forEach((div,i)=>{
-      div.querySelector('.rank-label').textContent = (i+1)+'等';
-    });
-    updateSum();
-  }
-
-  async function generateQRData() {
-    const total = +$('#qrTotal').value;
-    const groups = $$('#probSettings .prob-setting');
-    const counts = groups.map(div => +div.querySelector('input[name="count"]').value);
-    const sum = counts.reduce((a, b) => a + b, 0);
-    if (sum !== total) throw new Error('合計枚数が QRコード数と一致していません');
-
-    const data = [];
-    let id = 1;
-    for (let i = 0; i < groups.length; i++) {
-      const cnt = counts[i];
-      const fi = groups[i].querySelector('input[name="resultImage"]');
-      // デフォ画像（任意差し替え可）
-      const defaultImg = `images/default_${i+1}.png`;
-      const resultImg = fi.files[0] ? await imageToBase64(fi.files[0]) : defaultImg;
-
-      for (let j = 0; j < cnt; j++) {
-        const qrId = `${sessionId}-qr${id++}`;
-        const rank = `${i+1}等`;
-
-        // scan.html の絶対URL（配置に依存しない）
-        const handlerURL = new URL('scan.html', BASE_URL);
-        handlerURL.searchParams.set('id', qrId);
-        handlerURL.searchParams.set('rank', rank);
-        handlerURL.searchParams.set('v', '5'); // キャッシュ回避
-
-        const qrcodeImage = await new Promise((resolve, reject) => {
-          QRCode.toDataURL(handlerURL.href, { width: 60, margin: 1 }, (err, url) => err ? reject(err) : resolve(url));
+    class QR {
+      constructor(d) {
+        this.d = d; this.id = d.id; this.w = 100; this.h = 100;
+        this.x = Math.random()*Math.max(1,canvas.width  - this.w);
+        this.y = Math.random()*Math.max(1,canvas.height - this.h);
+        this.vx= (Math.random()*3-1.5) || 1;
+        this.vy= (Math.random()*3-1.5) || -1;
+        this.el=document.createElement('img');
+        this.el.src=d.image; this.el.className='qr'; this.el.dataset.qrId=d.id;
+        this.el.style.left=this.x+'px'; this.el.style.top=this.y+'px';
+        this.el.addEventListener('load', ()=>{
+          const r = this.el.getBoundingClientRect();
+          if (r.width && r.height){ this.w = r.width; this.h = r.height; }
         });
-
-        data.push({ id: qrId, image: qrcodeImage, resultImage: resultImg, rank });
+        this.el.addEventListener('click', ()=>this.click());
+        this.el.addEventListener('pointerdown', ()=>this.click());
+        document.body.appendChild(this.el);
       }
+      move(){
+        this.x += this.vx; this.y += this.vy;
+        if (this.x < 0) { this.x = 0; this.vx *= -1; }
+        if (this.y < 0) { this.y = 0; this.vy *= -1; }
+        if (this.x > canvas.width  - this.w) { this.x = canvas.width  - this.w; this.vx *= -1; }
+        if (this.y > canvas.height - this.h){ this.y = canvas.height - this.h; this.vy *= -1; }
+        this.el.style.left = this.x + 'px'; this.el.style.top  = this.y + 'px';
+      }
+      async click(){
+        if (!uid)  { alert('接続中…数秒後にお試しください'); return; }
+        if (hasDrawn) { alert('🎉 抽選済みです 🎉'); return; }
+        const now = Date.now();
+        const { id:qrId, rank } = this.d;
+        try {
+          await set(ER(`scans/${qrId}`), { uid, timestamp: now });
+          await set(ER(`users/${uid}`), { drawnAt: now, qrId, rank });
+          this.destroy();
+          logDraw(rank);
+          localStorage.setItem('lastResultImage', this.d.resultImage);
+          localStorage.setItem('lastRank', rank);
+          const resultURL = absUrl(`result/${encodeURIComponent(rank)}.html`);
+          window.open(resultURL, '_blank', 'noopener');
+        } catch(e) {
+          alert('🎉 抽選済みです 🎉');
+          console.warn(e);
+        }
+      }
+      destroy(){ this.el.remove(); }
     }
-    return { data };
-  }
 
-  class QR {
-    constructor(d) {
-      this.d = d;
-      this.id = d.id;
-      // 画像サイズの既定値（CSS と一致）
-      this.w = 60; this.h = 60;
-      this.x = Math.random()*Math.max(1,canvas.width  - this.w);
-      this.y = Math.random()*Math.max(1,canvas.height - this.h);
-      this.vx= (Math.random()*3-1.5) || 1;
-      this.vy= (Math.random()*3-1.5) || -1;
-      this.el=document.createElement('img');
-      this.el.src=d.image;
-      this.el.className='qr';
-      this.el.dataset.qrId=d.id;
-      this.el.style.left=this.x+'px';
-      this.el.style.top =this.y+'px';
-      this.el.addEventListener('load', ()=>{
-        const r = this.el.getBoundingClientRect();
-        if (r.width && r.height){ this.w = r.width; this.h = r.height; }
-      });
-      this.el.addEventListener('click', ()=>this.click());
-      this.el.addEventListener('pointerdown', ()=>this.click()); // タッチ対応
-      document.body.appendChild(this.el);
+    function animate(){
+      qrElements.forEach(q=>q.move());
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      stepConfetti(); drawConfetti();
+      animationFrame = requestAnimationFrame(animate);
     }
-    move(){
-      this.x += this.vx; this.y += this.vy;
-      // 画面端で反射（はみ出し補正付き）
-      if (this.x < 0) { this.x = 0; this.vx *= -1; }
-      if (this.y < 0) { this.y = 0; this.vy *= -1; }
-      if (this.x > canvas.width  - this.w) { this.x = canvas.width  - this.w; this.vx *= -1; }
-      if (this.y > canvas.height - this.h){ this.y = canvas.height - this.h; this.vy *= -1; }
-      this.el.style.left = this.x + 'px';
-      this.el.style.top  = this.y + 'px';
-    }
-    async click(){
-      if (!uid)  { alert('接続中…数秒後にお試しください'); return; }
-      if (hasDrawn) { alert('🎉 抽選済みです 🎉'); return; }
-      const now = Date.now();
-      const { id:qrId, rank } = this.d;
+
+    async function startGame(){
+      document.getElementById('addProbBtn').disabled=true;
+      document.body.classList.add('playing');
+      const bgm=document.getElementById('bgmSelect').value;
+      if (bgm!=='off') document.getElementById('bgm_'+bgm).play();
       try {
-        // 先着制御: scans/qrId を新規作成（{uid, timestamp}）
-        await set(ref(db, `scans/${qrId}`), { uid, timestamp: now });
-        // 自分の抽選情報を保存
-        await set(ref(db, `users/${uid}`), { drawnAt: now, qrId, rank });
-
-        hasDrawn=true;
-        this.destroy();
-        logDraw(rank);
-        localStorage.setItem('lastResultImage', this.d.resultImage);
-        localStorage.setItem('lastRank', rank);
-        const resultURL = absUrl(`result/${encodeURIComponent(rank)}.html`);
-        window.open(resultURL, '_blank', 'noopener');
+        const { data } = await generateQRData();
+        qrData = data;
+        qrElements = qrData.map(d=>new QR(d));
+        document.getElementById('startBtn').disabled=true;
+        animate();
       } catch(e) {
-        // 既に埋まっている or ルール未整合
-        alert('🎉 抽選済みです 🎉');
-        console.warn(e);
+        alert(e.message);
+        resetGame();
       }
     }
-    destroy(){ this.el.remove(); }
-  }
 
-  function animate(){
-    // 移動
-    qrElements.forEach(q=>q.move());
-    // 紙吹雪
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-    stepConfetti();
-    drawConfetti();
-    animationFrame = requestAnimationFrame(animate);
-  }
-
-  async function startGame(){
-    document.getElementById('addProbBtn').disabled=true;
-    document.body.classList.add('playing');
-    const bgm=document.getElementById('bgmSelect').value;
-    if (bgm!=='off') document.getElementById('bgm_'+bgm).play();
-    try {
-      const { data } = await generateQRData();
-      qrData = data;
-      qrElements = qrData.map(d=>new QR(d));
-      document.getElementById('startBtn').disabled=true; // 多重起動防止
-      animate();
-    } catch(e) {
-      alert(e.message);
-      resetGame();
-    }
-  }
-
-  async function resetGame(){
-  // まだオーナーでない場合は、まず引き継ぎを試みる（空なら成功するルール）
-    if (uid !== ownerUid) {
-     try {
-       await set(ref(db, 'config/ownerUid'), uid); // 空のときのみ許可
-       ownerUid = uid;
-       updateOwnerUI();
-     } catch (_) {}
-     if (uid !== ownerUid) { // まだ非オーナーなら中断
-       alert("リセットはオーナーのみ可能です（全消し後に『オーナーを引き継ぐ』を押してください）");
-       return;
-     }
-   }
-    try { await remove(ref(db, 'scans')); } catch(e) { console.warn('scans削除失敗:', e); }
-    try { await remove(ref(db, 'users')); } catch(e) { console.warn('users削除失敗:', e); }
-   
-    // 空のときは自動でオーナーをこの端末に再設定（ルールで空なら許可）
-    try {
-    await set(ref(db, 'config/ownerUid'), uid);
-    console.info('[Owner] ownerUid re-claimed by', uid);
-  } catch (e) {
-    console.info('[Owner] re-claim skipped:', e.code || e);
-  }
-    cancelAnimationFrame(animationFrame);
-    qrElements.forEach(q=>q.destroy());
-    qrElements=[]; qrData=[]; confetti=[];
-
-    ['bgm_pop','bgm_japan','bgm_fanfare'].forEach(id=>{ const a=document.getElementById(id); a.pause(); a.currentTime=0; });
-    document.getElementById('addProbBtn').disabled=false;
-    document.getElementById('startBtn').disabled=false;
-    document.body.classList.remove('playing');
-  }
-
-  function logDraw(rank){
-    const logs = JSON.parse(localStorage.getItem('qrLogs')||'[]');
-    logs.push({ rank, time:new Date().toLocaleString() });
-    localStorage.setItem('qrLogs', JSON.stringify(logs));
-  }
-
-  function showLog(){
-    const m=document.getElementById('logModal');
-    const logs=JSON.parse(localStorage.getItem('qrLogs')||'[]');
-    const tb=m.querySelector('tbody');
-    tb.innerHTML = '';
-    if (!logs.length) {
-      tb.innerHTML = '<tr><td colspan="2">履歴がありません</td></tr>';
-    } else {
-      logs.forEach(l=>{
-        const tr=document.createElement('tr');
-        tr.innerHTML = `<td>${l.rank}</td><td>${l.time}</td>`;
-        tb.appendChild(tr);
-      });
-    }
-    m.setAttribute('aria-hidden','false');
-    m.focus(); trapFocus(m);
-  }
-
-  function closeLog(){
-    const m=document.getElementById('logModal');
-    m.setAttribute('aria-hidden','true');
-    document.getElementById('showLogBtn').focus();
-  }
-
-  function trapFocus(modal){
-    const els=modal.querySelectorAll('button,[tabindex]:not([tabindex="-1"])');
-    const first=els[0], last=els[els.length-1];
-    modal.onkeydown=e=>{
-      if (e.key==='Escape') return closeLog();
-      if (e.key==='Tab'){
-        if (e.shiftKey&&document.activeElement===first){ e.preventDefault(); last.focus(); }
-        else if (!e.shiftKey&&document.activeElement===last){ e.preventDefault(); first.focus(); }
+    async function resetGame(){
+      // オーナーでなければ、まず引き継ぎを試みる（空のときに成功）
+      if (uid !== ownerUid) {
+        try { await set(ER('config/ownerUid'), uid); ownerUid = uid; updateOwnerUI(); } catch(_){}
+        if (uid !== ownerUid) { alert("リセットはオーナーのみ可能です"); return; }
       }
-    };
-  }
 
-  function downloadCsv(){
-    const logs=JSON.parse(localStorage.getItem('qrLogs')||'[]');
-    if (!logs.length) return alert('履歴なし');
-    const rows=[['等級','日時'], ...logs.map(l=>[l.rank,l.time])];
-    const csv=rows.map(r=>r.map(c=>`"${c}"`).join(',')).join('\r\n');
-    const blob=new Blob([csv],{type:'text/csv'});
-    const url=URL.createObjectURL(blob);
-    const a=document.createElement('a');
-    a.href=url; a.download='qr_logs.csv'; a.click();
-    URL.revokeObjectURL(url);
-  }
+      try { await remove(ER('scans')); } catch(e) { console.warn('scans削除失敗:', e); }
+      try { await remove(ER('users')); } catch(e) { console.warn('users削除失敗:', e); }
+      try { await set(ER('config/ownerUid'), uid); } catch(_){}
 
-  // ===== init =====
-  window.addEventListener('load', ()=>{
-    addProb(); updateSum();
-    document.getElementById('qrTotal').addEventListener('input', updateSum);
-    document.getElementById('addProbBtn').addEventListener('click', addProb);
-    document.getElementById('startBtn').addEventListener('click', startGame);
-    document.getElementById('resetBtn').addEventListener('click', resetGame);
-    document.getElementById('showLogBtn').addEventListener('click', showLog);
-    document.getElementById('closeLogBtn').addEventListener('click', closeLog);
-    document.getElementById('exportCsvBtn').addEventListener('click', downloadCsv);
-  });
-</script>
-  <footer>
-    QRコードは株式会社デンソーウェーブの登録商標です
-  </footer>
+      cancelAnimationFrame(animationFrame);
+      qrElements.forEach(q=>q.destroy());
+      qrElements=[]; qrData=[]; confetti=[];
+
+      ['bgm_pop','bgm_japan','bgm_fanfare'].forEach(id=>{ const a=document.getElementById(id); a.pause(); a.currentTime=0; });
+      document.getElementById('addProbBtn').disabled=false;
+      document.getElementById('startBtn').disabled=false;
+      document.body.classList.remove('playing');
+    }
+
+    function logDraw(rank){
+      const logs = JSON.parse(localStorage.getItem('qrLogs')||'[]');
+      logs.push({ rank, time:new Date().toLocaleString() });
+      localStorage.setItem('qrLogs', JSON.stringify(logs));
+    }
+
+    function showLog(){
+      const m=document.getElementById('logModal');
+      const logs=JSON.parse(localStorage.getItem('qrLogs')||'[]');
+      const tb=m.querySelector('tbody');
+      tb.innerHTML = '';
+      if (!logs.length) {
+        tb.innerHTML = '<tr><td colspan="2">履歴がありません</td></tr>';
+      } else {
+        logs.forEach(l=>{
+          const tr=document.createElement('tr');
+          tr.innerHTML = `<td>${l.rank}</td><td>${l.time}</td>`;
+          tb.appendChild(tr);
+        });
+      }
+      m.setAttribute('aria-hidden','false');
+      m.focus(); trapFocus(m);
+    }
+
+    function closeLog(){
+      const m=document.getElementById('logModal');
+      m.setAttribute('aria-hidden','true');
+      document.getElementById('showLogBtn').focus();
+    }
+
+    function trapFocus(modal){
+      const els=modal.querySelectorAll('button,[tabindex]:not([tabindex="-1"])');
+      const first=els[0], last=els[els.length-1];
+      modal.onkeydown=e=>{
+        if (e.key==='Escape') return closeLog();
+        if (e.key==='Tab'){
+          if (e.shiftKey&&document.activeElement===first){ e.preventDefault(); last.focus(); }
+          else if (!e.shiftKey&&document.activeElement===last){ e.preventDefault(); first.focus(); }
+        }
+      };
+    }
+
+    function downloadCsv(){
+      const logs=JSON.parse(localStorage.getItem('qrLogs')||'[]');
+      if (!logs.length) return alert('履歴なし');
+      const rows=[['等級','日時'], ...logs.map(l=>[l.rank,l.time])];
+      const csv=rows.map(r=>r.map(c=>`"${c}"`).join(',')).join('\r\n');
+      const blob=new Blob([csv],{type:'text/csv'});
+      const url=URL.createObjectURL(blob);
+      const a=document.createElement('a'); a.href=url; a.download='qr_logs.csv'; a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    // ===== init =====
+    window.addEventListener('load', ()=>{
+      addProb(); updateSum();
+      document.getElementById('qrTotal').addEventListener('input', updateSum);
+      document.getElementById('addProbBtn').addEventListener('click', addProb);
+      document.getElementById('startBtn').addEventListener('click', startGame);
+      document.getElementById('resetBtn').addEventListener('click', resetGame);
+      document.getElementById('showLogBtn').addEventListener('click', showLog);
+      document.getElementById('closeLogBtn').addEventListener('click', closeLog);
+      document.getElementById('exportCsvBtn').addEventListener('click', downloadCsv);
+    });
+  </script>
+
+  <footer>QRコードは株式会社デンソーウェーブの登録商標です</footer>
 </body>
 </html>

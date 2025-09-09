@@ -1,97 +1,87 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ja">
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>抽選中…</title>
-<style>
-  body { font-size:1.2rem; text-align:center; padding:1rem; font-family:sans-serif }
-  #msg b{font-size:1.4rem}
-  #diag{opacity:.75; font-size:.9rem; margin-top:.5rem}
-  button{padding:.6rem 1rem;border:0;border-radius:8px;background:#ff4081;color:#fff;margin-top:1rem}
-</style>
+<head>
+  <meta charset="utf-8"/>
+  <title>抽選中…</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <style> body { font-size:1.2rem; text-align:center; padding:1rem } </style>
+</head>
 <body>
-  <p id="msg">抽選中です…少々お待ちください</p>
-  <div id="diag"></div>
-  <button id="retryBtn" style="display:none">もう一度</button>
+  <p>抽選中です…少々お待ちください</p>
 
   <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-  import { getDatabase, ref, get, runTransaction } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
-  import {
-    getAuth, signInAnonymously, onAuthStateChanged,
-    setPersistence, browserLocalPersistence
-  } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+    import { getDatabase, ref, get, runTransaction } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
+    import { getAuth, signInAnonymously, onAuthStateChanged, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
 
-  // --- Firebase 設定（index.html と同じ） ---
-  const firebaseConfig = {
-    apiKey: "AIzaSyAyLd3jvdVXikgOXrni3HwlDNUieeZAhH8",
-    authDomain: "qryf-11545.firebaseapp.com",
-    databaseURL: "https://qryf-11545-default-rtdb.firebaseio.com",
-    projectId: "qryf-11545",
-    storageBucket: "qryf-11545.appspot.com",
-    messagingSenderId: "539005507453",
-    appId: "1:539005507453:web:9faf1d69b175a50ce41e14"
-  };
+    // --- Firebase 設定（index.html と同じ） ---
+    const firebaseConfig = {
+      apiKey: "AIzaSyAyLd3jvdVXikgOXrni3HwlDNUieeZAhH8",
+      authDomain: "qryf-11545.firebaseapp.com",
+      databaseURL: "https://qryf-11545-default-rtdb.firebaseio.com",
+      projectId: "qryf-11545",
+      storageBucket: "qryf-11545.appspot.com",
+      messagingSenderId: "539005507453",
+      appId: "1:539005507453:web:9faf1d69b175a50ce41e14"
+    };
 
-  // --- 初期化 ---
-  const app  = initializeApp(firebaseConfig);
-  const db   = getDatabase(app);
-  const auth = getAuth(app);
+    const app  = initializeApp(firebaseConfig);
+    const db   = getDatabase(app);
+    const auth = getAuth(app);
 
-  // --- URL パラメータ ---
-  const params = new URLSearchParams(location.search);
-  const qrId = params.get('id');
-  const rank = params.get('rank');
+    // --- URL パラメータ ---
+    const params = new URLSearchParams(location.search);
+    const qrId   = params.get('id');
+    const rank   = params.get('rank');
+    const eventId= params.get('ev');
+    const ER = (p) => ref(db, `events/${eventId}/${p}`);
 
-  // --- 表示ユーティリティ ---
-  const showError = (msg) => {
-    document.body.innerHTML =
-      `<p style="color:#c00;font-size:1.6rem;padding:1rem">⚠️ ${msg}</p>`;
-  };
+    const showError = (msg) => {
+      document.body.innerHTML = `<p style="color:#c00;font-size:1.6rem;padding:1rem">⚠️ ${msg}</p>`;
+    };
 
-  // --- 匿名ログイン（ローカル永続） ---
-  setPersistence(auth, browserLocalPersistence)
-    .then(() => signInAnonymously(auth))
-    .catch(e => showError("認証エラー: " + (e.code || e.message)));
+    if (!qrId || !rank || !eventId) { showError("URLに id / rank / ev がありません"); throw new Error("params missing"); }
 
-  onAuthStateChanged(auth, async (user) => {
-    if (!user) return;
-    if (!qrId || !rank) { showError("URLに id / rank がありません"); return; }
+    // --- 匿名ログイン（ローカル永続） ---
+    setPersistence(auth, browserLocalPersistence)
+      .then(() => signInAnonymously(auth))
+      .catch(e => showError("認証エラー: " + (e.code || e.message)));
 
-    const uid = user.uid;
-    const userRef = ref(db, `users/${uid}`);
-    const scanRef = ref(db, `scans/${qrId}`);
-    const now = Date.now();
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) return;
+      const uid = user.uid;
+      const userRef = ER(`users/${uid}`);
+      const scanRef = ER(`scans/${qrId}`);
+      const now = Date.now();
 
-    try {
-      // ① 既に抽選済みなら即終了
-      const existed = await get(userRef);
-      if (existed.exists()) { showError("※既に抽選済みです。"); return; }
+      try {
+        // ① 既に抽選済みなら即終了
+        const existed = await get(userRef);
+        if (existed.exists()) { showError("※既に抽選済みです。"); return; }
 
-      // ② users/$uid を “空のときだけ” 作成（原子的）
-      const userTx = await runTransaction(userRef, cur => {
-        if (cur) return cur;                 // 既に存在 → 変更しない
-        return { drawnAt: now, qrId, rank }; // 初回のみ書く
-      });
-      if (!userTx.committed) { showError("※既に抽選済みです。"); return; }
+        // ② users/$uid を“空のときだけ”作成（原子的）
+        const userTx = await runTransaction(userRef, cur => {
+          if (cur) return cur;
+          return { drawnAt: now, qrId, rank };
+        });
+        if (!userTx.committed) { showError("※既に抽選済みです。"); return; }
 
-      // ③ scans/$qrId も “空のときだけ” 確保（原子的）
-      const scanTx = await runTransaction(scanRef, cur => {
-        if (cur) return cur;               // 先に使われていた
-        return { uid, timestamp: now };
-      });
-      if (!scanTx.committed) {
-        // このQRは他の人に使用済み
-        showError("※このQRコードは使用済みです。別のQRをお試しください。");
-        return;
+        // ③ scans/$qrId を“空のときだけ”確保（原子的）
+        const scanTx = await runTransaction(scanRef, cur => {
+          if (cur) return cur;
+          return { uid, timestamp: now };
+        });
+        if (!scanTx.committed) {
+          showError("※このQRコードは使用済みです。別のQRをお試しください。");
+          return;
+        }
+
+        // ④ 結果へ
+        location.replace(`result/${encodeURIComponent(rank)}.html`);
+      } catch (e) {
+        showError("エラーが発生しました: " + (e.code || e.message));
       }
-
-      // ④ 結果へ
-      location.replace(`result/${encodeURIComponent(rank)}.html`);
-    } catch (e) {
-      showError("エラーが発生しました: " + (e.code || e.message));
-    }
-  });
-</script>
+    });
+  </script>
 </body>
 </html>
