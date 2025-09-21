@@ -7,53 +7,15 @@
   <link rel="manifest" href="manifest.json"/>
   <meta name="theme-color" content="#ff4081"/>
 
-  <style>
-    body { margin:0; font-family:sans-serif;
-      background: url('images/bg_setup.jpg') no-repeat center/cover fixed;
-      transition: background .5s ease;
-    }
-    body.playing { background: url('images/bg_play.jpg') no-repeat center/cover fixed; }
-    #setup { background: rgba(255,255,255,0.9); margin:1rem auto; padding:1rem; max-width:680px; border-radius:8px; }
-    .title-wrapper { display:flex; align-items:center; justify-content:space-between; gap:1rem; margin-bottom:.5rem; }
-    h2.title { font-size:2rem; font-weight:900; margin:.2rem 0; }
-    .meta { font-size:.9rem; color:#555; display:flex; gap:1rem; align-items:center; flex-wrap:wrap; }
-    .speech-bubble { font-size:.8rem; color:#333; background:#fff; border:2px solid #42a5f5; padding:.2rem .6rem; border-radius:8px; }
-
-    .instruction { background:#e3f2fd; border-left:4px solid #42a5f5; padding:.6rem .8rem; border-radius:4px; margin:.6rem 0; font-size:.95rem; color:#333; }
-    label { display:block; margin:.5rem 0; }
-    input[type=number], select { margin-left:.5rem; }
-    #countSum { font-weight:bold; margin:.5rem 0; }
-    #countSum[aria-live] { outline:none; }
-
-    .prob-setting { display:flex; align-items:center; background:#f7f7f7; padding:.5rem; margin-bottom:.5rem; border-radius:6px; }
-    .prob-setting .rank-label { width:3em; font-weight:bold; }
-    .prob-setting input[type=number] { width:70px; margin:0 .5rem; }
-    .prob-setting input[type=file] { margin-left:.5rem; }
-    .prob-setting .remove-btn { margin-left:auto; cursor:pointer; color:#d00; font-size:1.1rem; }
-
-    button { margin:4px; padding:8px 14px; border:none; border-radius:6px; background:#ff4081; color:#fff; cursor:pointer; }
-    button.secondary { background:#607d8b; }
-    button:disabled { opacity:.6; cursor:default; }
-
-    .qr { position:absolute; width:100px; height:100px; cursor:pointer; transition:opacity .3s; image-rendering:pixelated; }
-    @media(max-width:600px){ .qr { width:80px; height:80px; } button { font-size:.9rem; } }
-
-    canvas#confettiCanvas { position:fixed; top:0; left:0; pointer-events:none; z-index:9999; }
-
-    #logModal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); justify-content:center; align-items:center; z-index:10000; }
-    #logModal[aria-hidden="false"] { display:flex; }
-    #logModal .modal-content { background:#fff; padding:1rem; border-radius:8px; max-width:90%; max-height:80%; overflow:auto; }
-    #logTable { width:100%; border-collapse:collapse; margin-top:.5rem; }
-    #logTable th,#logTable td { border:1px solid #ddd; padding:8px; text-align:center; }
-
-    footer { position:fixed; bottom:0; left:0; width:100%; text-align:center; font-size:.6rem; background:rgba(255,255,255,.7); padding:4px 0; }
-    .qr.fade-out { transition: opacity 0.5s ease; opacity: 0; }
-  </style>
+  <!-- Google Fonts（日本語本文＋見出し） -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600;800&family=Outfit:wght@600;800&display=swap" rel="stylesheet">
 
   <!-- QRCode ライブラリ -->
   <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.0/build/qrcode.min.js"></script>
 
-  <!-- PWA Service Worker 登録（任意） -->
+  <!-- PWA Service Worker（任意） -->
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load',()=>{
@@ -61,6 +23,135 @@
       });
     }
   </script>
+
+  <style>
+    :root{
+      --bg:#0f1115; --card:rgba(255,255,255,0.9); --text:#1b1f24; --muted:#596575;
+      --accent:#ff4d88; --accent-2:#7c4dff; --chip-bg:#eef2ff; --chip-text:#3949ab;
+      --btn:#ff4d88; --btn-2:#5f7483;
+    }
+    @media (prefers-color-scheme: light){
+      :root{ --bg:#f5f7fb; --card:rgba(255,255,255,0.96); --text:#14171a; --muted:#5b6776; }
+    }
+    html[data-theme="light"]{ color-scheme: light; }
+    html[data-theme="dark"] { color-scheme: dark;  }
+
+    *{ box-sizing:border-box }
+    body{
+      margin:0;
+      font-family:"Noto Sans JP", system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      color:var(--text);
+      background: radial-gradient(1200px 800px at 10% 0%, #141927 0%, var(--bg) 50%),
+                  radial-gradient(1200px 800px at 90% 100%, #1b2133 0%, var(--bg) 50%);
+      transition: background .4s ease, color .2s ease;
+      min-height:100dvh;
+    }
+
+    #setup{
+      margin:1.2rem auto; padding:1rem; max-width:760px; border-radius:14px;
+      backdrop-filter: blur(6px);
+      background: var(--card);
+      border:1px solid rgba(255,255,255,.45);
+      box-shadow: 0 10px 30px rgba(18,23,38,.18);
+    }
+
+    .title-wrapper{ display:flex; align-items:flex-end; justify-content:space-between; gap:1rem; }
+    .title{
+      font-family:"Outfit","Noto Sans JP",sans-serif; font-size:2.2rem; font-weight:800; margin:.2rem 0;
+      background: linear-gradient(45deg, var(--accent), var(--accent-2));
+      -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+      letter-spacing:.5px;
+    }
+
+    .meta{ display:flex; flex-wrap:wrap; gap:.5rem; align-items:center; color:var(--muted); margin:.4rem 0 .6rem; }
+    .chip{
+      display:inline-flex; align-items:center; gap:.4rem;
+      background:var(--chip-bg); color:var(--chip-text);
+      padding:.35rem .7rem; border-radius:999px; font-size:.9rem; font-weight:700;
+    }
+
+    .instruction{
+      background:#e3f2fd; border-left:4px solid #42a5f5;
+      padding:.6rem .8rem; border-radius:6px; margin:.6rem 0; font-size:.95rem;
+    }
+
+    label{ display:block; margin:.55rem 0; }
+    input[type=number], select{ margin-left:.5rem; }
+
+    .prob-setting{
+      display:flex; align-items:center; gap:.5rem;
+      background:linear-gradient(180deg, rgba(255,255,255,.95), rgba(255,255,255,.88));
+      border:1px solid rgba(0,0,0,.06); border-radius:10px;
+      padding:.5rem; margin-bottom:.5rem;
+    }
+    .prob-setting .rank-label{ width:3em; font-weight:800; }
+    .prob-setting input[type=number]{ width:70px; }
+    .prob-setting input[type=file]{ margin-left:.25rem; }
+    .prob-setting .remove-btn{ margin-left:auto; cursor:pointer; color:#d00; font-size:1.1rem; }
+
+    #countSum{ font-weight:800; margin:.5rem 0; }
+    #countSum[aria-live]{ outline:none; }
+
+    button{
+      margin:4px; padding:10px 14px; border:none; border-radius:10px; cursor:pointer;
+      background:var(--btn); color:#fff; font-weight:800;
+      box-shadow:0 6px 16px rgba(255,77,136,.25);
+      transition:transform .05s ease, box-shadow .2s ease, opacity .2s ease;
+    }
+    button:hover{ transform:translateY(-1px); box-shadow:0 10px 22px rgba(255,77,136,.28); }
+    button:active{ transform:translateY(0); }
+    button.secondary{ background:var(--btn-2); box-shadow:0 6px 16px rgba(95,116,131,.25); }
+    button:disabled{ opacity:.6; cursor:default; transform:none; box-shadow:none; }
+
+    .qr{
+      position:absolute; width:100px; height:100px; cursor:pointer;
+      image-rendering:pixelated; filter: drop-shadow(0 6px 10px rgba(0,0,0,.25));
+      transition:opacity .45s ease;
+    }
+    .qr.fade-out{ opacity:0; }
+
+    /* スキャンモード：読み取りやすく大きめ＆停止 */
+    body.scan-mode .qr{ width:160px; height:160px; }
+
+    canvas#confettiCanvas{ position:fixed; top:0; left:0; pointer-events:none; z-index:9999; }
+
+    /* ログモーダル */
+    #logModal{ display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); justify-content:center; align-items:center; z-index:10000; }
+    #logModal[aria-hidden="false"]{ display:flex; }
+    #logModal .modal-content{ background:#fff; padding:1rem; border-radius:10px; max-width:90%; max-height:80%; overflow:auto; }
+    #logTable{ width:100%; border-collapse:collapse; margin-top:.5rem; }
+    #logTable th,#logTable td{ border:1px solid #ddd; padding:8px; text-align:center; }
+
+    footer{ position:fixed; bottom:0; left:0; width:100%; text-align:center; font-size:.65rem; color:#9aa3af; padding:6px 0; }
+  /* 使い方パネル（details）をテーマ連動に */
+.howto{
+  margin:.8rem 0;
+  border:1px solid rgba(0,0,0,.08);
+  border-radius:10px;
+  background: var(--card); /* ← #fff からテーマ変数に */
+}
+html[data-theme="dark"] .howto{
+  border-color: rgba(255,255,255,.12);
+}
+
+/* summaryのデフォルト矢印を消す（Safari/Chrome） */
+.howto > summary::-webkit-details-marker{ display:none; }
+
+/* summary の見た目 */
+.howto > summary{
+  cursor:pointer; list-style:none; padding:.8rem 1rem; font-weight:800;
+  display:flex; align-items:center; gap:.5rem;
+}
+.howto > summary::before{
+  content:"›"; display:inline-block; transform:rotate(0deg);
+  transition: transform .2s ease;
+  font-weight:900; font-size:1.1rem; color:var(--accent);
+}
+.howto[open] > summary::before{ transform:rotate(90deg); }
+
+.howto > div{ padding:.2rem 1rem 1rem 1rem; line-height:1.7; }
+.howto h4{ margin:.6rem 0 .3rem; font-size:1.05rem; }
+  </style>
 </head>
 
 <body>
@@ -75,7 +166,7 @@
         <tbody></tbody>
       </table>
       <div style="text-align:right; margin-top:1rem;">
-        <button id="exportCsvBtn">CSVダウンロード</button>
+        <button id="exportCsvBtn" class="secondary">CSVダウンロード</button>
         <button id="closeLogBtn">閉じる</button>
       </div>
     </div>
@@ -84,14 +175,44 @@
   <div id="setup">
     <div class="title-wrapper">
       <h2 class="title">QRdeまとめて抽選</h2>
-      <span class="speech-bubble">同時開催OK・誰でも主催OK</span>
+      <span class="chip" id="ownerBadge">状態: -</span>
     </div>
 
     <div class="meta">
-      <span id="ownerBadge">状態: -</span>
-      <span id="eventBadge">イベントID: -</span>
+      <span class="chip" id="eventBadge">イベントID: -</span>
       <button id="changeEventBtn" class="secondary">イベント切替</button>
+      <button id="toggleScanBtn" class="secondary">スキャンモード</button>
+      <button id="toggleThemeBtn" class="secondary">ダーク/ライト</button>
     </div>
+
+<details id="howto" class="howto">
+  <summary>📘 使い方ガイド（クリックで開く）</summary>
+  <div>
+    <h4>主催者</h4>
+    <ol style="margin:.2rem 0 0 1.2rem;">
+      <li>左上の<strong>イベントID</strong>を確認（必要なら<strong>イベント切替</strong>）。</li>
+      <li><strong>QRコード数</strong>と、等級ごとの<strong>枚数の合計</strong>を一致させる。</li>
+      <li><strong>スタート</strong>でQRを表示。読み取りやすいよう<strong>スキャンモード</strong>で拡大可。</li>
+      <li>読み取られたQRは<strong>フェードアウト</strong>。演出は紙吹雪で表示。</li>
+      <li><strong>抽選ログ</strong>で履歴確認・<strong>CSVダウンロード</strong>が可能。</li>
+      <li>次の回は<strong>リセット</strong>（オーナーのみ）。</li>
+    </ol>
+
+    <h4>参加者</h4>
+    <ul style="margin:.2rem 0 0 1.2rem;">
+      <li>スマホのカメラでQRを読み取るだけで抽選。</li>
+      <li>同一端末（匿名UID）は<strong>1回のみ</strong>。2回目以降は「既に抽選済み」と表示。</li>
+    </ul>
+
+    <h4>ヒント / トラブル時</h4>
+    <ul style="margin:.2rem 0 0 1.2rem;">
+      <li><strong>スタートできない</strong>：合計＝QRコード数か確認。</li>
+      <li><strong>リセットできない</strong>：オーナーのみ。必要なら「オーナーを引き継ぐ」を使用（イベントが空のとき）。</li>
+      <li><strong>QRが読み取りにくい</strong>：スキャンモードで拡大／背景の明暗コントラストを強める。</li>
+      <li><strong>更新が反映されない</strong>：キャッシュ削除・ハードリロード。</li>
+    </ul>
+  </div>
+</details>
 
     <div class="instruction">
       ※ 各等級(10等まで)の枚数の合計をQRコード数と一致させてスタート。<br>
@@ -112,7 +233,7 @@
     </label>
 
     <div id="probSettings"></div>
-    <button id="addProbBtn">等級を追加</button>
+    <button id="addProbBtn" class="secondary">等級を追加</button>
 
     <div id="countSum" aria-live="polite">
       合計枚数: <span id="currentSum">0</span> / <span id="totalQR">0</span>
@@ -120,7 +241,7 @@
 
     <button id="startBtn" disabled>スタート</button>
     <button id="resetBtn">リセット</button>
-    <button id="claimBtn" style="display:none">オーナーを引き継ぐ</button>
+    <button id="claimBtn" style="display:none" class="secondary">オーナーを引き継ぐ</button>
     <button id="showLogBtn" class="secondary">抽選ログを見る</button>
   </div>
 
@@ -135,7 +256,7 @@
     import { getDatabase, ref, set, onValue, remove } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
     import { getAuth, signInAnonymously, onAuthStateChanged, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
 
-    // ★ あなたのプロジェクト設定（scan.html と一致させる）
+    // ★ あなたの Firebase 設定（scan.html と一致）
     const firebaseConfig = {
       apiKey: "AIzaSyAyLd3jvdVXikgOXrni3HwlDNUieeZAhH8",
       authDomain: "qryf-11545.firebaseapp.com",
@@ -146,6 +267,7 @@
       appId: "1:539005507453:web:9faf1d69b175a50ce41e14"
     };
 
+    // GitHub Pages のベースURL
     const BASE_URL = "https://tenapp76.github.io/my-web-app76/";
 
     const app  = initializeApp(firebaseConfig);
@@ -158,7 +280,7 @@
     localStorage.setItem('eventId', eventId);
     const ER = (p) => ref(db, `events/${eventId}/${p}`);
 
-    // バッジ表示
+    // UI バッジ
     const eventBadge = document.getElementById('eventBadge');
     eventBadge.textContent = `イベントID: ${eventId}`;
     document.getElementById('changeEventBtn').addEventListener('click', ()=>{
@@ -189,28 +311,21 @@
         : `👤 オーナーではありません（owner: ${(ownerUid||'未設定').toString().slice(0,6)}…）`;
     }
 
-    // 空かどうか監視して、空なら“引き継ぎ”ボタンを出す
+    // DBが空なら“引き継ぎ”ボタン表示
     const empty = { scans:true, users:true };
     const claimBtn = document.getElementById('claimBtn');
-
-    function toggleClaimBtn(){
-      if (!claimBtn) return;
-      const canClaim = !!uid && empty.scans && empty.users; // 空なら誰でもOK（ルールで許可）
+    const toggleClaimBtn = ()=>{
+      const canClaim = !!uid && empty.scans && empty.users;
       claimBtn.style.display = canClaim ? 'inline-block' : 'none';
-    }
+    };
 
     onValue(ER('scans'), s => { empty.scans = !s.exists(); toggleClaimBtn(); });
     onValue(ER('users'), s => { empty.users = !s.exists(); toggleClaimBtn(); });
-
     onValue(ER('config/ownerUid'), s => { ownerUid = s.val(); updateOwnerUI(); toggleClaimBtn(); });
 
     claimBtn.addEventListener('click', async ()=>{
-      try {
-        await set(ER('config/ownerUid'), uid);
-        alert('この端末をオーナーに設定しました');
-      } catch(e){
-        alert('オーナー引き継ぎに失敗: ' + (e.code || e.message));
-      }
+      try { await set(ER('config/ownerUid'), uid); alert('この端末をオーナーに設定しました'); }
+      catch(e){ alert('オーナー引き継ぎに失敗: ' + (e.code || e.message)); }
     });
 
     setPersistence(auth, browserLocalPersistence)
@@ -224,6 +339,34 @@
       updateOwnerUI();
     });
 
+    // ===== テーマ & スキャンモード =====
+    const toggleScanBtn  = document.getElementById('toggleScanBtn');
+    const toggleThemeBtn = document.getElementById('toggleThemeBtn');
+    let scanMode = false;
+
+    function setTheme(mode){
+      document.documentElement.dataset.theme = mode;
+      localStorage.setItem('theme', mode);
+      toggleThemeBtn.textContent = (mode === 'dark') ? 'ライト' : 'ダーク';
+    }
+    setTheme(localStorage.getItem('theme') || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+
+    toggleThemeBtn.addEventListener('click', ()=>{
+      const cur = document.documentElement.dataset.theme || 'light';
+      setTheme(cur === 'dark' ? 'light' : 'dark');
+    });
+
+    toggleScanBtn.addEventListener('click', ()=>{
+      scanMode = !scanMode;
+      document.body.classList.toggle('scan-mode', scanMode);
+      toggleScanBtn.textContent = scanMode ? '通常モード' : 'スキャンモード';
+    });
+
+    window.addEventListener('keydown', (e)=>{
+      if (e.key.toLowerCase() === 's') toggleScanBtn.click();
+      if (e.key.toLowerCase() === 't') toggleThemeBtn.click();
+    });
+
     // ===== キャンバス & 紙吹雪 =====
     const canvas = document.getElementById('confettiCanvas');
     const ctx    = canvas.getContext('2d');
@@ -231,6 +374,7 @@
     fitCanvas(); window.addEventListener('resize', fitCanvas);
 
     let confetti = []; let qrData = [], qrElements = []; let animationFrame;
+
     function launchConfetti(x, y) {
       for (let i = 0; i < 40; i++) {
         confetti.push({ x, y, vx:(Math.random()-0.5)*6, vy:(Math.random()-1.2)*6, size:Math.random()*6+4, rot:Math.random()*Math.PI, vr:(Math.random()-0.5)*0.2, life:70 });
@@ -259,7 +403,7 @@
             el.classList.add('fade-out');
             const rect = el.getBoundingClientRect();
             launchConfetti(rect.left + rect.width/2, rect.top + rect.height/2);
-            setTimeout(() => qr.destroy(), 500);
+            setTimeout(() => qr.destroy(), 450);
           } else {
             qr.destroy();
           }
@@ -297,7 +441,7 @@
       div.className = 'prob-setting';
       div.innerHTML = `
         <span class="rank-label">${rank}等</span>
-        枚数: <input name="count" type="number" value="1" min="1" style="width:70px"> 枚
+        枚数: <input name="count" type="number" value="1" min="1"> 枚
         結果画像: <input name="resultImage" type="file" accept="image/*">
         ${rank>1?`<span class="remove-btn" role="button" tabindex="0">✖</span>`:``}
       `;
@@ -340,12 +484,15 @@
           const handlerURL = new URL('scan.html', BASE_URL);
           handlerURL.searchParams.set('id', qrId);
           handlerURL.searchParams.set('rank', rank);
-          handlerURL.searchParams.set('ev', eventId);   // イベントIDを埋め込む
+          handlerURL.searchParams.set('ev', eventId);   // イベントID
           handlerURL.searchParams.set('v', '5');
 
           const qrcodeImage = await new Promise((resolve, reject) => {
-            QRCode.toDataURL(handlerURL.href, { width: 256, margin: 2, errorCorrectionLevel: 'M' },
-              (err, url) => err ? reject(err) : resolve(url));
+            QRCode.toDataURL(
+              handlerURL.href,
+              { width: 256, margin: 2, errorCorrectionLevel: 'M' },
+              (err, url) => err ? reject(err) : resolve(url)
+            );
           });
 
           data.push({ id: qrId, image: qrcodeImage, resultImage: resultImg, rank });
@@ -403,7 +550,7 @@
     }
 
     function animate(){
-      qrElements.forEach(q=>q.move());
+      if (!scanMode) { qrElements.forEach(q=>q.move()); } // スキャンモード時は停止
       ctx.clearRect(0,0,canvas.width,canvas.height);
       stepConfetti(); drawConfetti();
       animationFrame = requestAnimationFrame(animate);
@@ -427,7 +574,7 @@
     }
 
     async function resetGame(){
-      // オーナーでなければ、まず引き継ぎを試みる（空のときに成功）
+      // オーナーでなければ、まず引き継ぎ（空なら成功）
       if (uid !== ownerUid) {
         try { await set(ER('config/ownerUid'), uid); ownerUid = uid; updateOwnerUI(); } catch(_){}
         if (uid !== ownerUid) { alert("リセットはオーナーのみ可能です"); return; }
@@ -502,6 +649,10 @@
 
     // ===== init =====
     window.addEventListener('load', ()=>{
+      // 初期テーマ
+      const savedTheme = localStorage.getItem('theme');
+      if (savedTheme) document.documentElement.dataset.theme = savedTheme;
+
       addProb(); updateSum();
       document.getElementById('qrTotal').addEventListener('input', updateSum);
       document.getElementById('addProbBtn').addEventListener('click', addProb);
