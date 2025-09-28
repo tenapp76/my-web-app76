@@ -7,7 +7,7 @@
   <link rel="manifest" href="manifest.json"/>
   <meta name="theme-color" content="#ff4081"/>
 
-  <!-- Google Fonts（日本語本文＋見出し） -->
+  <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600;800&family=Outfit:wght@600;800&display=swap" rel="stylesheet">
@@ -123,34 +123,28 @@
     #logTable th,#logTable td{ border:1px solid #ddd; padding:8px; text-align:center; }
 
     footer{ position:fixed; bottom:0; left:0; width:100%; text-align:center; font-size:.65rem; color:#9aa3af; padding:6px 0; }
-  /* 使い方パネル（details）をテーマ連動に */
-.howto{
-  margin:.8rem 0;
-  border:1px solid rgba(0,0,0,.08);
-  border-radius:10px;
-  background: var(--card); /* ← #fff からテーマ変数に */
-}
-html[data-theme="dark"] .howto{
-  border-color: rgba(255,255,255,.12);
-}
 
-/* summaryのデフォルト矢印を消す（Safari/Chrome） */
-.howto > summary::-webkit-details-marker{ display:none; }
-
-/* summary の見た目 */
-.howto > summary{
-  cursor:pointer; list-style:none; padding:.8rem 1rem; font-weight:800;
-  display:flex; align-items:center; gap:.5rem;
-}
-.howto > summary::before{
-  content:"›"; display:inline-block; transform:rotate(0deg);
-  transition: transform .2s ease;
-  font-weight:900; font-size:1.1rem; color:var(--accent);
-}
-.howto[open] > summary::before{ transform:rotate(90deg); }
-
-.howto > div{ padding:.2rem 1rem 1rem 1rem; line-height:1.7; }
-.howto h4{ margin:.6rem 0 .3rem; font-size:1.05rem; }
+    /* 使い方パネル（details）をテーマ連動に */
+    .howto{
+      margin:.8rem 0;
+      border:1px solid rgba(0,0,0,.08);
+      border-radius:10px;
+      background: var(--card);
+    }
+    html[data-theme="dark"] .howto{ border-color: rgba(255,255,255,.12); }
+    .howto > summary::-webkit-details-marker{ display:none; }
+    .howto > summary{
+      cursor:pointer; list-style:none; padding:.8rem 1rem; font-weight:800;
+      display:flex; align-items:center; gap:.5rem;
+    }
+    .howto > summary::before{
+      content:"›"; display:inline-block; transform:rotate(0deg);
+      transition: transform .2s ease;
+      font-weight:900; font-size:1.1rem; color:var(--accent);
+    }
+    .howto[open] > summary::before{ transform:rotate(90deg); }
+    .howto > div{ padding:.2rem 1rem 1rem 1rem; line-height:1.7; }
+    .howto h4{ margin:.6rem 0 .3rem; font-size:1.05rem; }
   </style>
 </head>
 
@@ -173,7 +167,21 @@ html[data-theme="dark"] .howto{
   </div>
 
   <div id="setup">
-    <div class="title-wrapper">
+    <div id="eventGate" style="display:none; margin:.8rem 0;">
+  <div style="padding:1rem; border:1px solid #e5e7eb; border-radius:12px; background:var(--card);">
+    <h3 style="margin:.2rem 0 1rem;">イベントを選択</h3>
+    <div style="display:flex; gap:.5rem; flex-wrap:wrap;">
+      <button id="createEvBtn">🆕 新しいイベントを作成</button>
+      <input id="joinEvInput" type="text" placeholder="既存IDを入力" style="flex:1; padding:.5rem;">
+      <button id="joinEvBtn" class="secondary">参加</button>
+    </div>
+    <p style="font-size:.9rem; color:var(--muted); margin:.6rem 0 0;">
+      作成すると、あなたの端末がそのイベントのオーナーになります。
+    </p>
+  </div>
+</div>
+
+<div class="title-wrapper">
       <h2 class="title">QRdeまとめて抽選</h2>
       <span class="chip" id="ownerBadge">状態: -</span>
     </div>
@@ -185,35 +193,35 @@ html[data-theme="dark"] .howto{
       <button id="toggleThemeBtn" class="secondary">ダーク/ライト</button>
     </div>
 
-<details id="howto" class="howto">
-  <summary>📘 使い方ガイド（クリックで開く）</summary>
-  <div>
-    <h4>主催者</h4>
-    <ol style="margin:.2rem 0 0 1.2rem;">
-      <li>左上の<strong>イベントID</strong>を確認（必要なら<strong>イベント切替</strong>）。</li>
-      <li><strong>QRコード数</strong>と、等級ごとの<strong>枚数の合計</strong>を一致させる。</li>
-      <li><strong>スタート</strong>でQRを表示。読み取りやすいよう<strong>スキャンモード</strong>で拡大可。</li>
-      <li>読み取られたQRは<strong>フェードアウト</strong>。演出は紙吹雪で表示。</li>
-      <li><strong>抽選ログ</strong>で履歴確認・<strong>CSVダウンロード</strong>が可能。</li>
-      <li>次の回は<strong>リセット</strong>（オーナーのみ）。</li>
-    </ol>
+    <details id="howto" class="howto">
+      <summary>📘 使い方ガイド（クリックで開く）</summary>
+      <div>
+        <h4>主催者</h4>
+        <ol style="margin:.2rem 0 0 1.2rem;">
+          <li>左上の<strong>イベントID</strong>を確認（必要なら<strong>イベント切替</strong>）。</li>
+          <li><strong>QRコード数</strong>と、等級ごとの<strong>枚数の合計</strong>を一致させる。</li>
+          <li><strong>スタート</strong>でQRを表示。読み取りやすいよう<strong>スキャンモード</strong>で拡大可。</li>
+          <li>読み取られたQRは<strong>フェードアウト</strong>。演出は紙吹雪で表示。</li>
+          <li><strong>抽選ログ</strong>で履歴確認・<strong>CSVダウンロード</strong>が可能。</li>
+          <li>次の回は<strong>リセット</strong>（オーナーのみ）。</li>
+        </ol>
 
-    <h4>参加者</h4>
-    <ul style="margin:.2rem 0 0 1.2rem;">
-      <li>スマホのカメラでQRを読み取るだけで抽選。</li>
-      <li>同一端末（匿名UID）は<strong>1回のみ</strong>。2回目以降は「既に抽選済み」と表示。</li>
-    </ul>
+        <h4>参加者</h4>
+        <ul style="margin:.2rem 0 0 1.2rem;">
+          <li>スマホのカメラでQRを読み取るだけで抽選。</li>
+          <li>同一端末（匿名UID）は<strong>1回のみ</strong>。2回目以降は「既に抽選済み」と表示。</li>
+        </ul>
 
-    <h4>ヒント / トラブル時</h4>
-    <ul style="margin:.2rem 0 0 1.2rem;">
-      <li><strong>スタートできない</strong>：合計＝QRコード数か確認。</li>
-      <li><strong>リセットできない</strong>：オーナーのみ。必要なら「オーナーを引き継ぐ」を使用（イベントが空のとき）。</li>
-      <li><strong>QRが読み取りにくい</strong>：スキャンモードで拡大／背景の明暗コントラストを強める。</li>
-      <li><strong>更新が反映されない</strong>：キャッシュ削除・ハードリロード。</li>
-      <li><strong>注意：</strong> PC（主催者画面）のQRはクリックしないでください。クリックすると抽選が実行されます。参加者のスマホで<strong>スキャンのみ</strong>を行ってください。</li>
-    </ul>
-  </div>
-</details>
+        <h4>ヒント / トラブル時</h4>
+        <ul style="margin:.2rem 0 0 1.2rem;">
+          <li><strong>スタートできない</strong>：合計＝QRコード数か確認。</li>
+          <li><strong>リセットできない</strong>：オーナーのみ。必要なら「オーナーを引き継ぐ」を使用（イベントが空のとき）。</li>
+          <li><strong>QRが読み取りにくい</strong>：スキャンモードで拡大／背景の明暗コントラストを強める。</li>
+          <li><strong>更新が反映されない</strong>：キャッシュ削除・ハードリロード。</li>
+          <li><strong>注意：</strong> PC（主催者画面）のQRはクリックしないでください。クリックすると抽選が実行されます。参加者のスマホで<strong>スキャンのみ</strong>を行ってください。</li>
+        </ul>
+      </div>
+    </details>
 
     <div class="instruction">
       ※ 各等級(10等まで)の枚数の合計をQRコード数と一致させてスタート。<br>
@@ -258,7 +266,7 @@ html[data-theme="dark"] .howto{
     import { getDatabase, ref, set, onValue, remove } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
     import { getAuth, signInAnonymously, onAuthStateChanged, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
 
-    // ★ あなたの Firebase 設定（scan.html と一致）
+    // ★ Firebase 設定（scan.html と一致）
     const firebaseConfig = {
       apiKey: "AIzaSyAyLd3jvdVXikgOXrni3HwlDNUieeZAhH8",
       authDomain: "qryf-11545.firebaseapp.com",
@@ -269,7 +277,7 @@ html[data-theme="dark"] .howto{
       appId: "1:539005507453:web:9faf1d69b175a50ce41e14"
     };
 
-    // GitHub Pages のベースURL
+    // GitHub Pages のベースURL（scan.html 生成用）
     const BASE_URL = "https://tenapp76.github.io/my-web-app76/";
 
     const app  = initializeApp(firebaseConfig);
@@ -282,7 +290,41 @@ html[data-theme="dark"] .howto{
     localStorage.setItem('eventId', eventId);
     const ER = (p) => ref(db, `events/${eventId}/${p}`);
 
-    // UI バッジ
+    // URLの ?ev を取得。無ければゲートを表示
+const qp = new URLSearchParams(location.search);
+let ev = qp.get('ev');
+
+function randomEvId(){
+  return 'ev-' + new Date().toISOString().slice(0,10).replace(/-/g,'') +
+         '-' + Math.random().toString(36).slice(2,6);
+}
+
+function showEventGate(){
+  const gate = document.getElementById('eventGate');
+  gate.style.display = 'block';
+  document.getElementById('createEvBtn').onclick = ()=>{
+    const id = randomEvId();
+    location.href = `${location.pathname}?ev=${encodeURIComponent(id)}`;
+  };
+  document.getElementById('joinEvBtn').onclick = ()=>{
+    const id = (document.getElementById('joinEvInput').value || '').trim();
+    if (!id) return alert('イベントIDを入力してください');
+    location.href = `${location.pathname}?ev=${encodeURIComponent(id)}`;
+  };
+}
+
+// ev が無ければゲートを出して処理を中断（以降の初期化は ev 前提）
+// これに置き換え
+if (!ev && !localStorage.getItem('eventId')) {
+  showEventGate();
+  // 初回は操作だけ無効化（UIは生成されるので「結果画像」も出る）
+  document.getElementById('startBtn').disabled = true;
+  document.getElementById('resetBtn').disabled = true;
+}
+  // ここで return しておくと、evが決まるまでゲームUIは動かない
+  // 以降の Firebase 初期化や onValue 等を ev 以降にしている場合は return不要
+
+// UI バッジ
     const eventBadge = document.getElementById('eventBadge');
     eventBadge.textContent = `イベントID: ${eventId}`;
     document.getElementById('changeEventBtn').addEventListener('click', ()=>{
@@ -537,6 +579,7 @@ html[data-theme="dark"] .howto{
         try {
           await set(ER(`scans/${qrId}`), { uid, timestamp: now });
           await set(ER(`users/${uid}`), { drawnAt: now, qrId, rank });
+          hasDrawn = true; // 即時ガード
           this.destroy();
           logDraw(rank);
           localStorage.setItem('lastResultImage', this.d.resultImage);
@@ -560,7 +603,7 @@ html[data-theme="dark"] .howto{
 
     async function startGame(){
       document.getElementById('addProbBtn').disabled=true;
-      document.body.classList.add('playing');
+      document.body.classList.add('playing'); // 背景は固定（CSSで変更しない）
       const bgm=document.getElementById('bgmSelect').value;
       if (bgm!=='off') document.getElementById('bgm_'+bgm).play();
       try {
@@ -651,6 +694,8 @@ html[data-theme="dark"] .howto{
 
     // ===== init =====
     window.addEventListener('load', ()=>{
+      updateOwnerUI(); // ← これを最初に1回
+      addProb(); updateSum();
       // 初期テーマ
       const savedTheme = localStorage.getItem('theme');
       if (savedTheme) document.documentElement.dataset.theme = savedTheme;
