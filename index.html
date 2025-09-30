@@ -525,7 +525,7 @@ if (!ev && !localStorage.getItem('eventId')) {
           const qrId = `${sessionId}-qr${id++}`;
           const rank = `${i+1}等`;
 
-          const handlerURL = new URL('scan.html', BASE_URL);
+          const handlerURL = new URL('scan.html', location.href);
           handlerURL.searchParams.set('id', qrId);
           handlerURL.searchParams.set('rank', rank);
           handlerURL.searchParams.set('ev', eventId);   // イベントID
@@ -711,6 +711,10 @@ if (!ev && !localStorage.getItem('eventId')) {
     });
   </script>
 
-  <footer>QRコードは株式会社デンソーウェーブの登録商標です</footer>
+  <footer>QRコードは株式会社デンソーウェーブの登録商標です ／
+    <span class="legal-note">本アプリの利用により生じたいかなる損害についても、開発者は責任を負いません。イベントでの利用前に必ず動作確認を行ってください。</span>
+  <br>
+  <small class="about-note">補足：AIを活用して作成した実験的ツールです。</small>
+  </footer>
 </body>
 </html>
