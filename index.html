@@ -197,14 +197,31 @@
       <summary>📘 使い方ガイド（クリックで開く）</summary>
       <div>
         <h4>主催者</h4>
-        <ol style="margin:.2rem 0 0 1.2rem;">
-          <li>左上の<strong>イベントID</strong>を確認（必要なら<strong>イベント切替</strong>）。</li>
-          <li><strong>QRコード数</strong>と、等級ごとの<strong>枚数の合計</strong>を一致させる。</li>
-          <li><strong>スタート</strong>でQRを表示。読み取りやすいよう<strong>スキャンモード</strong>で拡大可。</li>
-          <li>読み取られたQRは<strong>フェードアウト</strong>。演出は紙吹雪で表示。</li>
-          <li><strong>抽選ログ</strong>で履歴確認・<strong>CSVダウンロード</strong>が可能。</li>
-          <li>次の回は<strong>リセット</strong>（オーナーのみ）。</li>
-        </ol>
+          <p style="margin:.4rem 0 0 1.2rem; color:var(--muted);">
+          ※ 複数PCで同じイベントIDにアクセスすると、同じ抽選枠を共有します（同時進行向け）。別回にしたい場合は新しいIDを作成してください。
+          </p>
+    <ol style="margin:.2rem 0 0 1.2rem;">
+
+  <li>
+    <strong>イベントID</strong> を確認・設定
+    <ul style="margin:.3rem 0 0 1.1rem;">
+      <li>現在のID：画面上部の <em>イベントID</em> バッジに表示（例: <code>ev-202410-xxxx</code>）。</li>
+      <li>新しく始める：<strong>イベント切替</strong>→任意のIDを入力（例: <code>ev-2024-文化祭1</code>）。ページが <code>?ev=…</code> を付けて再読み込みされます。</li>
+      <li>既存の回を続ける：共有されたIDを入力すると、同じ「抽選枠（scans/users）」をみんなで共有します。</li>
+      <li>未設定のままでも開始可：初回アクセス時は自動生成ID or 直前に使ったID（保存）で動作します。<br>
+          ただし <u>回を分けたい時は毎回新しいID</u>にすると履歴や在庫（枚数）が混ざりません。</li>
+      <li>オーナーについて：各イベントIDごとに最初に確保した端末がオーナーです。<br>
+          <strong>リセット</strong>できるのはオーナーのみ。イベントが空（scans/usersなし）のときは
+          <em>オーナーを引き継ぐ</em> ボタンで乗っ取り可。</li>
+    </ul>
+  </li>
+
+      <li><strong>QRコード数</strong>と、等級ごとの<strong>枚数の合計</strong>を一致させる。</li>
+      <li><strong>スタート</strong>でQRを表示。読み取りやすいよう<strong>スキャンモード</strong>で拡大可。</li>
+      <li>読み取られたQRは<strong>フェードアウト</strong>し、紙吹雪で演出。</li>
+      <li><strong>抽選ログ</strong>で履歴確認・<strong>CSVダウンロード</strong>が可能。</li>
+      <li>次の回は<strong>リセット</strong>（オーナーのみ）。必要なら新しい<strong>イベントID</strong>に切替。</li>
+       </ol>
 
         <h4>参加者</h4>
         <ul style="margin:.2rem 0 0 1.2rem;">
