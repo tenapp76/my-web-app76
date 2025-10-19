@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>QRdeまとめて抽選</title>
+  <button id="installBtn" class="secondary" style="display:none;">アプリをインストール</button>
   <link rel="manifest" href="manifest.json"/>
   <meta name="theme-color" content="#ff4081"/>
 
@@ -17,6 +18,23 @@
 
   <!-- PWA Service Worker（任意） -->
   <script>
+    let deferredPrompt = null;
+const installBtn = document.getElementById('installBtn');
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  installBtn.style.display = 'inline-block';
+});
+
+installBtn?.addEventListener('click', async () => {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  await deferredPrompt.userChoice;
+  deferredPrompt = null;
+  installBtn.style.display = 'none';
+});
+
     if ('serviceWorker' in navigator) {
       window.addEventListener('load',()=>{
         navigator.serviceWorker.register('service-worker.js').catch(()=>console.warn('SW登録失敗'));
