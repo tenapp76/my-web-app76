@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>QRdeまとめて抽選</title>
-  <button id="installBtn" class="secondary" style="display:none;">アプリをインストール</button>
   <link rel="manifest" href="manifest.json"/>
   <meta name="theme-color" content="#ff4081"/>
 
@@ -18,29 +17,44 @@
 
   <!-- PWA Service Worker（任意） -->
   <script>
-    let deferredPrompt = null;
-const installBtn = document.getElementById('installBtn');
+  let deferredPrompt = null;
 
-window.addEventListener('beforeinstallprompt', (e) => {
-  e.preventDefault();
-  deferredPrompt = e;
-  installBtn.style.display = 'inline-block';
-});
+  // インストール条件を満たしたときに発火
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    const btn = document.getElementById('installBtn');
+    if (btn) btn.style.display = 'inline-block';
+  });
 
-installBtn?.addEventListener('click', async () => {
-  if (!deferredPrompt) return;
-  deferredPrompt.prompt();
-  await deferredPrompt.userChoice;
-  deferredPrompt = null;
-  installBtn.style.display = 'none';
-});
-
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load',()=>{
-        navigator.serviceWorker.register('service-worker.js').catch(()=>console.warn('SW登録失敗'));
-      });
+  // クリックでプロンプト表示
+  document.addEventListener('click', async (e) => {
+    if (e.target && e.target.id === 'installBtn' && deferredPrompt) {
+      deferredPrompt.prompt();
+      await deferredPrompt.userChoice;
+      deferredPrompt = null;
+      const btn = document.getElementById('installBtn');
+      if (btn) btn.style.display = 'none';
     }
-  </script>
+  });
+
+  // すでにインストール済みならボタンを隠す
+  window.addEventListener('appinstalled', () => {
+    const btn = document.getElementById('installBtn');
+    if (btn) btn.style.display = 'none';
+  });
+  if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
+    const btn = document.getElementById('installBtn');
+    if (btn) btn.style.display = 'none';
+  }
+
+  // SW 登録（そのままでOK）
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load',()=>{
+      navigator.serviceWorker.register('service-worker.js').catch(()=>console.warn('SW登録失敗'));
+    });
+  }
+</script>
 
   <style>
     :root{
@@ -202,6 +216,7 @@ installBtn?.addEventListener('click', async () => {
 <div class="title-wrapper">
       <h2 class="title">QRdeまとめて抽選</h2>
       <span class="chip" id="ownerBadge">状態: -</span>
+      <button id="installBtn" class="secondary" style="display:none;">アプリをインストール</button>
     </div>
 
     <div class="meta">
